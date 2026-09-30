@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - Krow</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Dancing+Script:wght@600&family=Indie+Flower&family=Inter:wght@400;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap');
+
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: #09090b; color: #fff; padding-bottom: 80px; transition: background-color 0.5s; overflow-x: hidden;}
+        
+        header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; position: fixed; top: 0; width: 100%; box-sizing: border-box; z-index: 100; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
+        .btn-volver { color: #fff; text-decoration: none; font-size: 1.2rem; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .btn-editar { background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: none; }
+
+        .portada-container { width: 100%; height: 250px; background-color: #27272a; background-size: cover; background-position: center; position: relative; }
+        .portada-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 150px; background: linear-gradient(to top, var(--color-fondo, #09090b), transparent); transition: background 0.5s;}
+
+        .info-perfil-centrada { position: relative; margin-top: -60px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 20px; z-index: 10; }
+        .avatar-perfil { width: 120px; height: 120px; border-radius: 50%; background-color: #18181b; border: 4px solid var(--color-fondo, #09090b); box-shadow: 0 10px 25px rgba(0,0,0,0.5); background-size: cover; background-position: center; transition: border-color 0.5s;}
+        
+        .nombre-perfil { margin: 15px 0 5px 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
+        .frase-insignia { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.1rem; color: #d4d4d8; max-width: 80%; margin-bottom: 15px; }
+
+        .reproductor-cancion { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 30px; backdrop-filter: blur(5px); margin-bottom: 15px; cursor: pointer; transition: transform 0.1s;}
+        .reproductor-cancion:active { transform: scale(0.95); }
+        .icono-play { background: #fff; color: #000; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;}
+        .info-cancion { font-size: 0.8rem; text-align: left; }
+        .titulo-cancion { font-weight: 700; color: #fff; }
+        .artista-cancion { color: #a1a1aa; font-size: 0.7rem; }
+
+        .btn-match { background: linear-gradient(45deg, #ec4899, #8b5cf6); border: none; color: white; padding: 10px 25px; border-radius: 30px; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4); transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 8px; margin-bottom: 20px;}
+        .btn-match:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6); }
+        .btn-match:active { transform: translateY(2px); }
+
+        .tabs-perfil { display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); width: 100%; overflow-x: auto; scrollbar-width: none; }
+        .tabs-perfil::-webkit-scrollbar { display: none; }
+        .tab { flex: 1; min-width: 80px; text-align: center; padding: 15px 10px; color: #a1a1aa; font-weight: 600; font-size: 0.85rem; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+        .tab.activo { color: #fff; border-bottom-color: #fff; }
+
+        .tab-content { display: none; padding: 2px; animation: fadeIn 0.3s ease; }
+        .tab-content.activo { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .caja-vacia { background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 40px 20px; text-align: center; color: #71717a; font-size: 0.9rem; margin: 18px; grid-column: 1 / -1;}
+        
+        .grid-feed { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+        .foto-cuadrada { aspect-ratio: 1/1; background-color: #27272a; background-size: cover; background-position: center; cursor: pointer;}
+
+        #contenedor-diario { padding: 15px; }
+        .entrada-diario { background-color: #fdf6e3; background-image: repeating-linear-gradient(transparent, transparent 25px, rgba(0,0,0,0.1) 26px); padding: 25px 20px 25px 45px; margin-bottom: 20px; border-radius: 4px; color: #1f2937; box-shadow: 2px 5px 12px rgba(0,0,0,0.4); position: relative; }
+        .entrada-diario::before { content: ''; position: absolute; top: 0; left: 30px; bottom: 0; width: 2px; background-color: rgba(239, 68, 68, 0.5); }
+        .diario-titulo { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; color: #000; position: relative; z-index: 2;}
+        .diario-texto { font-size: 1.2rem; line-height: 26px; white-space: pre-wrap; position: relative; z-index: 2; color: #111827;}
+
+        #contenedor-corcho { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; padding: 20px; }
+        .post-it { width: 100%; aspect-ratio: 1/1; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; filter: drop-shadow(2px 5px 5px rgba(0,0,0,0.4)); position: relative; background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 4px; background-color: transparent;}
+        .tachuela { width: 12px; height: 12px; background: radial-gradient(circle, #ef4444 40%, #991b1b 100%); border-radius: 50%; position: absolute; top: 12%; left: 50%; transform: translateX(-50%); box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .post-it-texto { font-family: 'Caveat', cursive; font-size: 1.1rem; color: #1f2937; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; word-wrap: break-word; width: 80%; margin: 0 auto; }
+        .post-it-autor { position: absolute; bottom: 12%; right: 12%; font-size: 0.65rem; color: rgba(0,0,0,0.6); font-weight: 700; }
+
+        .btn-flotante { position: fixed; bottom: 85px; right: 20px; width: 55px; height: 55px; background: #a855f7; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 400; border: none; box-shadow: 0 5px 15px rgba(168,85,247,0.4); cursor: pointer; z-index: 1000; transition: transform 0.2s; display: flex;}
+        .btn-flotante:active { transform: scale(0.9); }
+
+        .panel-temas { display: flex; gap: 10px; padding: 10px 0; overflow-x: auto; justify-content: center;}
+        .circulo-tema { width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; flex-shrink: 0; }
+        .circulo-tema.activo { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.3);}
+
+      .btn-chat {
+    background: rgba(255, 255, 255, 0.05); /* Sutil transparencia */
+    border: 1px solid rgba(255, 255, 255, 0.15); /* Borde sutil */
+    color: white;
+    backdrop-filter: blur(10px);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 15px auto;
+    display: block;
+    width: 90%;
+    max-width: 300px;
+    transition: all 0.2s ease;
+}
+
+.btn-chat:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+    </style>
+</head>
+<body id="cuerpo-perfil">
+
+    <header>
+        <a href="#" class="btn-volver" id="btn-volver">←</a>
+        <button class="btn-editar" id="btn-editar-perfil">Editar Perfil</button>
+    </header>
+
+    <div class="portada-container" id="ui-portada">
+        <div class="portada-fade"></div>
+    </div>
+
+    <div class="info-perfil-centrada">
+        <div class="avatar-perfil" id="ui-avatar"></div>
+        <div class="nombre-perfil" id="ui-nombre">Cargando...</div>
+        <div class="frase-insignia" id="ui-frase">"..."</div>
+        
+        <div class="reproductor-cancion" id="btn-reproductor">
+            <div class="icono-play" id="ui-play-icon">▶</div>
+            <div class="info-cancion">
+                <div class="titulo-cancion" id="ui-cancion-titulo">Sin canción</div>
+                <div class="artista-cancion" id="ui-cancion-artista">Añade una pista en Editar Perfil</div>
+            </div>
+        </div>
+
+        <button class="btn-match" id="btn-hacer-match" style="display: none;">❤️ Hacer Match</button>
+    </div>
+
+  <button id="btn-iniciar-chat" class="btn-chat" style="display: none;">💬 Iniciar Rol Privado</button>
+
+    <div class="tabs-perfil">
+        <div class="tab activo" onclick="cambiarTab('feed', this)">Feed</div>
+        <div class="tab" onclick="cambiarTab('diario', this)">Diario</div>
+        <div class="tab" onclick="cambiarTab('corcho', this)">Corcho</div>
+    </div>
+
+    <div class="tab-content activo" id="tab-feed">
+        <div class="grid-feed" id="contenedor-feed"></div>
+    </div>
+
+    <div class="tab-content" id="tab-diario">
+        <div id="contenedor-diario"></div>
+    </div>
+
+    <div class="tab-content" id="tab-corcho">
+        <div id="contenedor-corcho"></div>
+    </div>
+
+    <button class="btn-flotante" id="btn-magico">+</button>
+
+      <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyC3_P-prlT0bmm8bREQ2g4uLaDamTRHnGI", authDomain: "krow-83002.firebaseapp.com", projectId: "krow-83002", storageBucket: "krow-83002.firebasestorage.app", messagingSenderId: "567485047347", appId: "1:567485047347:web:87fbf4a8b44a657061b946" };
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const comunidadId = urlParams.get('id') || localStorage.getItem('krow_comunidad_activa');
+        document.getElementById("btn-volver").href = `comunidad.html?id=${comunidadId}`;
+
+        let usuarioActual = null; let pjActivo = null;
+        let audioObj = null; let estaReproduciendo = false;
+        let tabActual = 'feed'; 
+
+        const ESTILOS_POSTIT = [
+            "background-color: #fef08a;", "background-color: #fbcfe8;", "background-color: #bbf7d0;", "background-color: #e9d5ff;", "background-color: #bae6fd;"
+        ];
+
+        document.getElementById('btn-hacer-match').style.display = 'none';
+
+        window.cambiarTab = (idTab, elemento) => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('activo'));
+            elemento.classList.add('activo');
+            document.getElementById(`tab-${idTab}`).classList.add('activo');
+            tabActual = idTab; 
+        };
+
+                onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = "index.html"; return; }
+            if (!comunidadId) { Swal.fire({title: 'Falla Técnica', text: 'No se detectó el ID de la comunidad.', icon: 'error', background: '#09090b', color: '#fff'}); return; }
+            
+            usuarioActual = user;
+            
+            const pjPerfilId = urlParams.get('pj') || localStorage.getItem(`pj_activo_${comunidadId}`);
+            const uidPerfil = urlParams.get('uid') || user.uid;
+            const mipjActivo = localStorage.getItem(`pj_activo_${comunidadId}`);
+            
+            if (!pjPerfilId || pjPerfilId === "null") {
+                Swal.fire({title: 'Memoria Vacía', text: 'Toca tu avatar en la pantalla anterior.', icon: 'warning', background: '#09090b', color: '#fff'});
+                return;
+            }
+            
+            // --- LÓGICA DE BOTONES PRIVADOS Y MATCH ---
+            if (mipjActivo && mipjActivo !== pjPerfilId) {
+                const btnChat = document.getElementById("btn-iniciar-chat");
+                const btnMatch = document.getElementById("btn-hacer-match");
+                const btnEditar = document.getElementById("btn-editar-perfil");
+
+                if (btnEditar) btnEditar.style.display = "none";
+                
+                        if (btnChat) {
+            btnChat.style.display = "block";
+                    btnChat.onclick = async () => {
+            const chatid = [mipjActivo, pjPerfilId].sort().join('_');
+            
+                    try {
+            // 1. Descargamos rápido TU información
+            const miPjSnap = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${mipjActivo}`));
+            let miNombre = "Anónimo"; let miAvatar = "";
+            if (miPjSnap.exists()) { miNombre = miPjSnap.data().nombre; miAvatar = miPjSnap.data().avatarUrl || ""; }
+
+            // 2. Guardamos el chat
+            await setDoc(doc(db, `comunidades/${comunidadId}/chatsPrivados/${chatid}`), {
+                chatId: chatid,
+                participantes: [mipjActivo, pjPerfilId],
+                infoParticipantes: {
+                    [mipjActivo]: { nombre: miNombre, avatar: miAvatar },
+                    [pjPerfilId]: { nombre: pjActivo.nombre, avatar: pjActivo.avatarUrl || "" }
+                },
+                ultimaActualizacion: serverTimestamp()
+            }, { merge: true });
+
+            // 3. ENVIAMOS LA NOTIFICACIÓN AQUÍ ADENTRO (¡No afuera!)
+            await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
+                tipo: 'chat',
+                titulo: 'Nuevo Rol Privado',
+                mensaje: `${miNombre} ha iniciado un chat privado contigo.`,
+                receptorId: pjPerfilId,
+                avatarUrl: miAvatar,
+                link: `chats.html?id=${comunidadId}`,
+                leida: false,
+                timestamp: serverTimestamp()
+            });
+
+        } catch (e) {
+            console.error("Error al registrar chat privado:", e);
+        }
+
+        // 4. El viaje a la sala (afuera de todo)
+        window.location.href = `sala-chat.html?id=${comunidadId}&chat=${chatid}&target=${pjPerfilId}&targetUid=${uidPerfil}&miUid=${usuarioActual.uid}&miPj=${mipjActivo}`;
+        };
+
+        }
+
+                if (btnMatch) {
+                    btnMatch.style.display = "block";
+                    btnMatch.onclick = async () => {
+                        try {
+                            const matchRef = doc(db, `comunidades/${comunidadId}/matches`, `${mipjActivo}_${pjPerfilId}`);
+                            const matchInversoRef = doc(db, `comunidades/${comunidadId}/matches`, `${pjPerfilId}_${mipjActivo}`);
+
+                            const matchSnap = await getDoc(matchRef);
+                            if (matchSnap.exists()) {
+                                return Swal.fire({ title: 'Ya enviaste una chispa', text: 'Ya le habías dado match a este personaje.', icon: 'info', background: '#121216', color: '#fff' });
+                            }
+
+                            const matchInversoSnap = await getDoc(matchInversoRef);
+                            const esMutuo = matchInversoSnap.exists();
+
+                            await setDoc(matchRef, {
+                                remitentePJ: mipjActivo,
+                                destinatarioPJ: pjPerfilId,
+                                remitenteUser: usuarioActual.uid,
+                                destinatarioUser: uidPerfil,
+                                mutuo: esMutuo,
+                                timestamp: serverTimestamp()
+                            });
+
+                            if (esMutuo) {
+                    const miPjSnap = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${mipjActivo}`));
+                    let miNombre = "Alguien"; let miAvatar = "";
+                    if (miPjSnap.exists()) { miNombre = miPjSnap.data().nombre; miAvatar = miPjSnap.data().avatarUrl || ""; }
+
+                    // 2. Alerta para el OTRO personaje (¡Se revela quién eres!)
+                    await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
+                        tipo: 'match',
+                        titulo: '¡MATCH MUTUO! 💖',
+                        mensaje: `¡A ${miNombre} también le gustas! Ya pueden enviarse mensajes.`,
+                        receptorId: pjPerfilId,
+                        avatarUrl: miAvatar, // Aquí ya sale tu carita en lugar del anónimo
+                        link: `perfil.html?id=${comunidadId}&pj=${mipjActivo}&uid=${usuarioActual.uid}`,
+                        leida: false,
+                        timestamp: serverTimestamp()
+                    });
+
+                    // 3. Alerta para TI (Para que tengas el trofeo en tu campanita)
+                    await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
+                        tipo: 'match',
+                        titulo: '¡MATCH MUTUO! 💖',
+                        mensaje: `¡La chispa con ${pjActivo.nombre} es mutua!`,
+                        receptorId: mipjActivo,
+                        avatarUrl: pjActivo.avatarUrl || "", // La carita de tu crush
+                        link: `perfil.html?id=${comunidadId}&pj=${pjPerfilId}&uid=${uidPerfil}`,
+                        leida: false,
+                        timestamp: serverTimestamp()
+                    });
+
+                                await updateDoc(matchInversoRef, { mutuo: true });
+                                Swal.fire({ title: '¡MATCH MUTUO! ❤️', text: '¡Ambos sintieron la chispa!', icon: 'success', background: '#121216', color: '#fff' });
+                            } else {
+                                                  // --- ENVIAR NOTIFICACIÓN DE CHISPA ---
+                    await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
+                        tipo: 'match',
+                        titulo: '¡Alguien te lanzó una chispa! 💘',
+                        mensaje: 'Un personaje misterioso está interesado en ti. Sigue interactuando para descubrir si hay Match mutuo.',
+                        receptorId: pjPerfilId,
+                        avatarUrl: '', // Lo dejamos vacío para que use el emoji de corazón por defecto y sea anónimo
+                        link: `comunidad.html?id=${comunidadId}`,
+                        leida: false,
+                        timestamp: serverTimestamp()
+                    });
+
+                                Swal.fire({ title: '¡Chispa enviada!', text: 'Se ha enviado una notificación anónima.', icon: 'success', background: '#121216', color: '#fff', timer: 2000, showConfirmButton: false });
+                            }
+                        } catch (error) {
+                            console.error("Error al enviar match:", error);
+                            Swal.fire('Error', 'No se pudo enviar la chispa.', 'error');
+                        }
+                    };
+                }
+            }
+            
+            try {
+                // --- DESCARGAMOS EL PERFIL ---
+                const pjSnap = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${uidPerfil}/personajes/${pjPerfilId}`));
+                if(pjSnap.exists()) {
+                    pjActivo = { id: pjSnap.id, ...pjSnap.data() };
+                    pintarPerfil();
+                    
+                    // Si el perfil es el tuyo, mostramos el botón de editar
+                    if (mipjActivo === pjPerfilId) {
+                        const btnEditar = document.getElementById("btn-editar-perfil");
+                        if (btnEditar) btnEditar.style.display = "block";
+                    }
+                    
+                    cargarFeed(); cargarDiario(); cargarCorcho();
+                } else {
+                    Swal.fire({title: 'Personaje Borrado', text: 'El personaje ya no está en Firebase.', icon: 'error', background: '#09090b', color: '#fff'});
+                    document.getElementById('ui-nombre').textContent = "Personaje Fantasma";
+                }
+            } catch(error) {
+                console.error(error);
+                Swal.fire({title: 'Error Crítico', text: error.message, icon: 'error', background: '#09090b', color: '#fff'});
+            }
+        });
+
+
+        function pintarPerfil() {
+            document.getElementById('ui-nombre').textContent = pjActivo.nombre;
+            document.getElementById('ui-avatar').style.backgroundImage = `url('${pjActivo.avatarUrl}')`;
+            if(pjActivo.portadaUrl) document.getElementById('ui-portada').style.backgroundImage = `url('${pjActivo.portadaUrl}')`;
+            if(pjActivo.frase) document.getElementById('ui-frase').textContent = `"${pjActivo.frase}"`;
+            if(pjActivo.cancionTitulo) document.getElementById('ui-cancion-titulo').textContent = pjActivo.cancionTitulo;
+            if(pjActivo.cancionArtista) document.getElementById('ui-cancion-artista').textContent = pjActivo.cancionArtista;
+
+            const colorFondo = pjActivo.colorAesthetic || '#09090b';
+            document.documentElement.style.setProperty('--color-fondo', colorFondo);
+            document.getElementById('cuerpo-perfil').style.backgroundColor = colorFondo;
+        }
+
+        function cargarFeed() {
+            onSnapshot(query(collection(db, `comunidades/${comunidadId}/feed`), where("autorId", "==", pjActivo.id)), (snapshot) => {
+                const div = document.getElementById('contenedor-feed'); div.innerHTML = '';
+                if(snapshot.empty) { div.innerHTML = `<div class="caja-vacia">Tu cuadrícula está vacía. Crea una publicación.</div>`; return; }
+                
+                let pubs = []; snapshot.forEach(d => pubs.push(d.data()));
+                pubs.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+
+                pubs.forEach(post => {
+                    const template = `<div class="foto-cuadrada" style="background-image: url('${post.imagenUrl}')" onclick="Swal.fire({imageUrl: '${post.imagenUrl}', text: '${post.texto}', background: '#121216', color: '#fff'})"></div>`;
+                    div.insertAdjacentHTML('beforeend', template);
+                });
+            });
+        }
+
+        function cargarDiario() {
+    const duenoUid = urlParams.get('uid') || (usuarioActual ? usuarioActual.uid : '');
+    if (!pjActivo || !pjActivo.id) return;
+
+    onSnapshot(query(collection(db, `comunidades/${comunidadId}/miembros/${duenoUid}/personajes/${pjActivo.id}/diario`)), (snapshot) => {
+        const div = document.getElementById('contenedor-diario'); 
+        if (!div) return;
+        div.innerHTML = "";
+        
+        if (snapshot.empty) {
+            div.innerHTML = '<div class="mensaje-vacio">Las páginas de este diario están en blanco.</div>';
+            return;
+        }
+
+        let paginas = []; 
+        snapshot.forEach(d => paginas.push({ id: d.id, ...d.data() }));
+        paginas.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+
+        paginas.forEach(p => {
+            const template = `
+                <div class="entrada-diario" style="font-family: ${p.fuente || 'sans-serif'};">
+                    <h3 class="diario-titulo">${p.titulo}</h3>
+                    <p class="diario-texto">${p.texto}</p>
+                </div>
+            `;
+            div.insertAdjacentHTML('beforeend', template);
+        });
+    });
+}
+
+
+        function cargarCorcho() {
+    // Calculamos el UID del dueño del perfil de forma segura sin depender de variables externas
+    const duenoUid = urlParams.get('uid') || (usuarioActual ? usuarioActual.uid : '');
+    if (!pjActivo || !pjActivo.id) return;
+
+    onSnapshot(query(collection(db, `comunidades/${comunidadId}/miembros/${duenoUid}/personajes/${pjActivo.id}/corcho`)), (snapshot) => {
+        const div = document.getElementById('contenedor-corcho');
+        if (!div) return;
+        div.innerHTML = "";
+        
+        if (snapshot.empty) {
+            div.innerHTML = '<div class="mensaje-vacio">Nadie ha pegado notas aquí.</div>';
+            return;
+        }
+
+        let notas = []; 
+        snapshot.forEach(d => notas.push(d.data()));
+        notas.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+
+        notas.forEach(c => {
+            const autor = c.anonimo ? 'Anónimo' : c.autorNombre;
+            const template = `<div class="post-it" style="${c.estilo}"><div class="tachuela"></div><div class="post-it-texto">${c.texto}</div><div class="post-it-autor">${autor}</div></div>`;
+            div.insertAdjacentHTML('beforeend', template);
+        });
+    });
+}
+
+
+
+        document.getElementById('btn-reproductor').addEventListener('click', () => {
+            if(!pjActivo.cancionMp3) return;
+            if(!audioObj) { audioObj = new Audio(pjActivo.cancionMp3); audioObj.loop = true; }
+            if(estaReproduciendo) { audioObj.pause(); document.getElementById('ui-play-icon').textContent = '▶'; estaReproduciendo = false; } 
+            else { audioObj.play(); document.getElementById('ui-play-icon').innerHTML = '<b>||</b>'; estaReproduciendo = true; }
+        });
+
+        // 5. LÓGICA DEL BOTÓN DE HACER MATCH
+const btnHacerMatch = document.getElementById('btn-hacer-match');
+if (btnHacerMatch) {
+    btnHacerMatch.addEventListener('click', async () => {
+        if (!mipjActivo) {
+            return Swal.fire('Atención', 'Selecciona un personaje activo para interactuar.', 'warning');
+        }
+
+        try {
+            // Referencia a los registros de cerrojitos/matches en esta comunidad
+            const matchRef = doc(db, `comunidades/${comunidadId}/matches`, `${mipjActivo}_${pjPerfilId}`);
+            const matchInversoRef = doc(db, `comunidades/${comunidadId}/matches`, `${pjPerfilId}_${mipjActivo}`);
+
+            const matchSnap = await getDoc(matchRef);
+            
+            if (matchSnap.exists()) {
+                return Swal.fire({
+                    title: 'Ya enviaste una chispa',
+                    text: 'Ya le habías dado match a este personaje anteriormente.',
+                    icon: 'info',
+                    background: '#121216', color: '#fff', confirmButtonColor: '#fff'
+                });
+            }
+
+            // Verificamos si el otro usuario ya te había dado match antes (Match Mutuo)
+            const matchInversoSnap = await getDoc(matchInversoRef);
+            const esMutuo = matchInversoSnap.exists();
+
+            // Guardamos tu "match" en la base de datos
+            await setDoc(matchRef, {
+                remitentePJ: mipjActivo,
+                destinatarioPJ: pjPerfilId,
+                remitenteUser: usuarioActual.uid,
+                destinatarioUser: uidPerfil,
+                mutuo: esMutuo,
+                timestamp: serverTimestamp()
+            });
+
+            if (esMutuo) {
+                // Actualizamos también el inverso para marcarlo como mutuo
+                await updateDoc(matchInversoRef, { mutuo: true });
+                
+                await Swal.fire({
+                    title: '¡MATCH MUTUO! ❤️',
+                    text: '¡Ambos sintieron la chispa! Se han enviado notificaciones cruzadas.',
+                    icon: 'success',
+                    background: '#121216', color: '#fff', confirmButtonColor: '#fff'
+                });
+            } else {
+                await Swal.fire({
+                    title: '¡Chispa enviada!',
+                    text: 'Se ha enviado una notificación anónima.',
+                    icon: 'success',
+                    background: '#121216', color: '#fff', confirmButtonColor: '#fff',
+                    timer: 2000, showConfirmButton: false
+                });
+            }
+
+        } catch (error) {
+            console.error("Error al enviar match:", error);
+            Swal.fire('Error', 'No se pudo enviar la chispa.', 'error');
+        }
+    });
+}
+
+
+        document.getElementById('btn-magico').addEventListener('click', async () => {
+            if(tabActual === 'feed') {
+                const { value: formValues } = await Swal.fire({
+                    title: 'Nueva Publicación', html: `<input id="sf-img" class="swal2-input" placeholder="Link de la imagen"><textarea id="sf-txt" class="swal2-textarea" placeholder="Lore / Descripción..."></textarea>`,
+                    background: '#09090b', color: '#fff', showCancelButton: true, confirmButtonText: 'Publicar',
+                    preConfirm: () => { return { img: document.getElementById('sf-img').value, txt: document.getElementById('sf-txt').value } }
+                });
+                if(formValues && formValues.img) await addDoc(collection(db, `comunidades/${comunidadId}/feed`), { autorId: pjActivo.id, autorNombre: pjActivo.nombre, autorAvatar: pjActivo.avatarUrl, imagenUrl: formValues.img, texto: formValues.txt, timestamp: serverTimestamp() });
+            }
+            else if(tabActual === 'diario') {
+                const { value: formValues } = await Swal.fire({
+                    title: 'Página del Diario', html: `
+                        <input id="sd-tit" class="swal2-input" placeholder="Título (Ej. Día 1)">
+                        <select id="sd-font" class="swal2-input" style="background:#121216; color:#fff; width:80%; margin-bottom:10px;">
+                            <option value="'Caveat', cursive">Manuscrita Cursiva</option>
+                            <option value="'Dancing Script', cursive">Elegante Antigua</option>
+                            <option value="'Indie Flower', cursive">Despreocupada</option>
+                            <option value="'Inter', sans-serif">Letra Normal</option>
+                        </select>
+                        <textarea id="sd-txt" class="swal2-textarea" placeholder="Escribe tus pensamientos..." style="height: 150px;"></textarea>
+                    `,
+                    background: '#09090b', color: '#fff', showCancelButton: true, confirmButtonText: 'Guardar',
+                    preConfirm: () => { return { titulo: document.getElementById('sd-tit').value, fuente: document.getElementById('sd-font').value, texto: document.getElementById('sd-txt').value } }
+                });
+
+                      if(formValues && formValues.titulo) {
+            // 1. Guarda la página en el diario
+            await addDoc(collection(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${pjActivo.id}/diario`), { ...formValues, timestamp: serverTimestamp() });
+            
+            // 2. Envía la notificación global
+            await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
+                tipo: 'feed',
+                titulo: 'Nuevo fragmento 📖',
+                mensaje: `${pjActivo.nombre} ha escrito una nueva página en su diario.`,
+                receptorId: 'todos',
+                avatarUrl: pjActivo.avatarUrl || "",
+                link: `perfil.html?id=${comunidadId}&pj=${pjActivo.id}&uid=${urlParams.get('uid') || usuarioActual.uid}`,
+                leida: false,
+                timestamp: serverTimestamp()
+            });
+        }
+
+            }
+
+                  else if(tabActual === 'corcho') {
+            let htmlCirculos = ""; 
+            ESTILOS_POSTIT.forEach(e => htmlCirculos += `<div class="circulo-tema" style="${e}; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: inline-block;" onclick="seleccionarEstilo(this, '${e}')"></div>`);
+            
+            const htmlEstilos = `<div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">${htmlCirculos}</div>`;
+
+            window.estiloElegido = ESTILOS_POSTIT[0];
+            window.seleccionarEstilo = (el, est) => { 
+                el.parentElement.querySelectorAll('.circulo-tema').forEach(t => t.style.border = "none"); 
+                el.style.border = "2px solid #fff"; 
+                window.estiloElegido = est; 
+            };
+
+            const { value: formValues } = await Swal.fire({
+                title: 'Dejar una Nota',
+                html: `${htmlEstilos}<textarea id="sc-txt" class="swal2-textarea" placeholder="Escribe la nota..."></textarea><br><input type="checkbox" id="sc-anon"> <label>Anónimo</label>`,
+                background: '#09090b', color: '#fff', showCancelButton: true,
+                confirmButtonText: 'Pegar',
+                preConfirm: () => { return { texto: document.getElementById('sc-txt').value, anonimo: document.getElementById('sc-anon').checked } }
+            });
+
+            if(formValues && formValues.texto) {
+                try {
+                    let nombreEscritor = "Anónimo";
+                    let avatarEscritor = "";
+                    
+                    const mipjActivoId = localStorage.getItem(`pj_activo_${comunidadId}`);
+                    if (mipjActivoId && usuarioActual) {
+                        const miSnap = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${mipjActivoId}`));
+                        if (miSnap.exists()) {
+                            nombreEscritor = miSnap.data().nombre;
+                            avatarEscritor = miSnap.data().avatarUrl || "";
+                        }
+                    }
+
+                    // Calculamos el UID del dueño del perfil de forma segura
+                    const duenoUid = urlParams.get('uid') || usuarioActual.uid;
+
+                    // 1. Guardamos la nota usando el UID seguro
+                    await addDoc(collection(db, `comunidades/${comunidadId}/miembros/${duenoUid}/personajes/${pjActivo.id}/corcho`), { 
+                        texto: formValues.texto, 
+                        estilo: window.estiloElegido, 
+                        anonimo: formValues.anonimo, 
+                        autorNombre: nombreEscritor, 
+                        timestamp: serverTimestamp() 
+                    });
+
+                    let autorNoti = formValues.anonimo ? "Alguien misterioso" : nombreEscritor;
+
+                    // 2. Enviamos la notificación al dueño del perfil
+                    await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
+                        tipo: 'comentario',
+                        titulo: 'Nueva nota en tu Tablero 📌',
+                        mensaje: `${autorNoti} dejó un post-it en tu tablero.`,
+                        receptorId: pjActivo.id, 
+                        avatarUrl: formValues.anonimo ? "" : avatarEscritor,
+                        link: `perfil.html?id=${comunidadId}&pj=${pjActivo.id}&uid=${duenoUid}`,
+                        leida: false,
+                        timestamp: serverTimestamp()
+                    });
+
+                    Swal.fire({ title: '¡Nota pegada!', icon: 'success', background: '#09090b', color: '#fff', timer: 1500, showConfirmButton: false });
+
+                } catch (error) {
+                    console.error("Error al pegar nota:", error);
+                    Swal.fire({ title: 'Error de Red/Permiso', text: error.message, icon: 'error', background: '#09090b', color: '#fff' });
+                }
+            }
+        }
+
+
+});
+
+                document.getElementById('btn-editar-perfil').addEventListener('click', async () => {
+            const hC = `<div class="panel-temas"><div class="circulo-tema" style="background-color: #09090b;" onclick="seleccionarColorEdicion('#09090b', this)"></div><div class="circulo-tema" style="background-color: #451a03;" onclick="seleccionarColorEdicion('#451a03', this)"></div><div class="circulo-tema" style="background-color: #3b0764;" onclick="seleccionarColorEdicion('#3b0764', this)"></div><div class="circulo-tema" style="background-color: #064e3b;" onclick="seleccionarColorEdicion('#064e3b', this)"></div><div class="circulo-tema" style="background-color: #7f1d1d;" onclick="seleccionarColorEdicion('#7f1d1d', this)"></div></div>`;
+            window.colorElegidoTemp = pjActivo.colorAesthetic || '#09090b';
+            window.seleccionarColorEdicion = (c, e) => { e.parentElement.querySelectorAll('.circulo-tema').forEach(t=>t.classList.remove('activo')); e.classList.add('activo'); window.colorElegidoTemp = c; };
+
+            const { value: f } = await Swal.fire({
+                title: 'Editar Perfil', 
+                html: `${hC}
+                    <input id="ep-nom" class="swal2-input" placeholder="Nombre del Personaje" value="${pjActivo.nombre || ''}">
+                    <input id="ep-ava" class="swal2-input" placeholder="Foto de perfil (Catbox)" value="${pjActivo.avatarUrl || ''}">
+                    <input id="ep-port" class="swal2-input" placeholder="Portada (Catbox)" value="${pjActivo.portadaUrl || ''}">
+                    <input id="ep-frase" class="swal2-input" placeholder="Frase" value="${pjActivo.frase || ''}">
+                    <input id="ep-ctit" class="swal2-input" placeholder="Canción" value="${pjActivo.cancionTitulo || ''}">
+                    <input id="ep-cart" class="swal2-input" placeholder="Artista" value="${pjActivo.cancionArtista || ''}">
+                    <input id="ep-cmp3" class="swal2-input" placeholder="Link MP3" value="${pjActivo.cancionMp3 || ''}">`,
+                background: '#09090b', color: '#fff', confirmButtonColor: '#fff',
+                confirmButtonText: '<span style="color: #000;">Guardar</span>',
+                showCancelButton: true,
+                preConfirm: () => { 
+                    return { 
+                        nombre: document.getElementById('ep-nom').value.trim(),
+                        avatarUrl: document.getElementById('ep-ava').value.trim(),
+                        colorAesthetic: window.colorElegidoTemp, 
+                        portadaUrl: document.getElementById('ep-port').value.trim(), 
+                        frase: document.getElementById('ep-frase').value, 
+                        cancionTitulo: document.getElementById('ep-ctit').value, 
+                        cancionArtista: document.getElementById('ep-cart').value, 
+                        cancionMp3: document.getElementById('ep-cmp3').value.trim() 
+                    } 
+                }
+            });
+
+            if (f) {
+                if(audioObj && pjActivo.cancionMp3 !== f.cancionMp3) { 
+                    audioObj.pause(); audioObj = null; estaReproduciendo = false; document.getElementById('ui-play-icon').textContent = '▶'; 
+                }
+                await updateDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${pjActivo.id}`), f);
+                pjActivo = { ...pjActivo, ...f }; 
+                pintarPerfil();
+            }
+        });
+        
+    </script>
+</body>
+</html>

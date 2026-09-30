@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comunidad - Krow</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: #09090b; color: #fff; padding-bottom: 80px; overflow-x: hidden; }
+        a { text-decoration: none; color: inherit; }
+
+        /* HEADER & BANNER */
+        .btn-volver { position: absolute; top: 15px; left: 15px; z-index: 10; background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1); }
+        .banner-comunidad { width: 100%; height: 180px; background-color: #27272a; background-size: cover; background-position: center; position: relative; }
+        .banner-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: linear-gradient(to top, #09090b, transparent); }
+        
+        .info-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 20px; margin-top: -30px; position: relative; z-index: 5; }
+        .info-titulos h1 { margin: 0; font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }
+        
+        /* MENU OPCIONES SUPERIOR */
+        .btn-opciones { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: 5px; }
+        .dropdown-opciones { display: none; position: absolute; right: 20px; top: 30px; background: #18181b; border: 1px solid #27272a; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 200px; z-index: 100; }
+        .opcion-item { display: block; padding: 12px 15px; font-size: 0.9rem; border-bottom: 1px solid #27272a; cursor: pointer; transition: background 0.2s; }
+        .opcion-item:hover { background: #27272a; }
+        .opcion-peligro { color: #be123c; }
+        .solo-admin { display: none; }
+
+        /* BARRA PERSONAJE LOCAL */
+        .barra-perfil-local { background: #121216; margin: 20px; padding: 15px; border-radius: 12px; border: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; }
+        .perfil-local-info { display: flex; align-items: center; gap: 12px; }
+        .avatar-local { width: 45px; height: 45px; border-radius: 50%; background-color: #27272a; background-size: cover; background-position: center; border: 2px solid #a855f7;}
+        .btn-cambiar-perfil { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; }
+
+        /* MODAL PERSONAJES JS */
+        .pj-item { display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; background: #18181b; border: 1px solid transparent; transition: all 0.2s; }
+        .pj-item:hover { background: #27272a; }
+        .pj-item.activo { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
+        .pj-avatar { width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; }
+        .pj-nombre { flex-grow: 1; font-weight: 600; }
+        .pj-check { color: #a855f7; font-weight: bold; }
+
+        /* FEED / MURO */
+        .feed-container { padding: 0 20px 20px 20px; }
+        
+        /* NAVBAR INFERIOR */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #09090b; border-top: 1px solid #27272a; display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #71717a; font-size: 0.7rem; font-weight: 600; gap: 4px; position: relative; }
+        .nav-item.activo { color: #fff; }
+        .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
+        
+        .badge-num { position: absolute; top: -5px; right: -5px; background: #be123c; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.65rem; font-weight: bold; display: none; }
+
+      .btn-directorio {
+    background-color: #18181b;
+    color: #fff;
+    border: 1px solid #27272a;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 20px;
+    transition: background 0.2s, border-color 0.2s;
+}
+.btn-directorio:hover {
+    background-color: #27272a;
+    border-color: #a855f7;
+}
+
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="btn-volver">← Volver al Hub</a>
+    
+    <div class="banner-comunidad" id="ui-banner">
+        <div class="banner-fade"></div>
+    </div>
+
+    <div class="info-header">
+        <div class="info-titulos">
+            <h1 id="ui-nombre">Cargando...</h1>
+        </div>
+        
+        <div style="position: relative;">
+            <button class="btn-opciones" id="btn-opciones">⋮</button>
+            <div class="dropdown-opciones" id="menu-opciones">
+                <!-- Para Todos -->
+                <a href="#" class="opcion-item" id="opcion-lista-personajes">👥 Directorio de Personajes</a>
+                <!-- Solo Admins -->
+                <a href="#" class="opcion-item solo-admin" id="opcion-lista-usuarios">⚙️ Gestión de Usuarios (Admins)</a>
+                <!-- Salir al index -->
+                <a href="#" class="opcion-item" id="opcion-salir-definitivo">🚪 Abandonar Comunidad</a>
+                <!-- Peligro -->
+                <a href="#" class="opcion-item opcion-peligro solo-admin" id="opcion-eliminar">⚠️ Eliminar comunidad</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="barra-perfil-local">
+        <div class="perfil-local-info">
+            <div class="avatar-local" id="ui-pj-avatar"></div>
+            <div>
+                <div style="font-weight: 700; color: #fff; font-size: 0.95rem;" id="ui-pj-nombre">Modo Espectador</div>
+                <div style="color: #a1a1aa; font-size: 0.8rem;" id="ui-pj-contador">Personajes: 0/5</div>
+            </div>
+        </div>
+        <button class="btn-cambiar-perfil" id="btn-abrir-personajes">Cambiar Avatar</button>
+    </div>
+
+    <div class="feed-container">
+        <h2 style="font-size: 1.2rem; color: #fff; margin-top: 0;">Muro Principal</h2>
+        <div id="muro-global" style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="text-align:center; color:#a1a1aa; padding: 20px;">Cargando publicaciones...</div>
+        </div>
+    </div>
+
+    <!-- Barra Inferior de 6 Botones -->
+    <div class="bottom-nav">
+        <a href="#" class="nav-item activo" id="nav-feed"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Feed</span></a>
+        
+        <a href="#" class="nav-item" id="nav-notif" style="position: relative;">
+        <div class="badge-num" id="badge-notif" style="display: none;">0</div>
+        <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+        <span>Notif.</span>
+        </a>
+
+        
+        <a href="#" class="nav-item" id="nav-chat"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg><span>Chat</span></a>
+        
+        <a href="#" class="nav-item" id="nav-chismes"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg><span>Chismes</span></a>
+
+        <a href="#" class="nav-item" id="nav-perfil"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Perfil</span></a>
+
+        <!-- Reclutas con el icono correcto (Exclamación) - Solo Admins -->
+        <a href="#" class="nav-item solo-admin-flex" id="nav-solicitudes" style="display: none;">
+            <div class="badge-num" id="badge-reclutas-num">0</div>
+            <svg viewBox="0 0 24 24"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
+            <span>Reclutas</span>
+        </a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, deleteDoc, setDoc, collection, addDoc, onSnapshot, query, orderBy, where, updateDoc, arrayUnion, arrayRemove, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyC3_P-prlT0bmm8bREQ2g4uLaDamTRHnGI", authDomain: "krow-83002.firebaseapp.com", projectId: "krow-83002", storageBucket: "krow-83002.firebasestorage.app", messagingSenderId: "567485047347", appId: "1:567485047347:web:87fbf4a8b44a657061b946" };
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        let comunidadId = urlParams.get('id') || localStorage.getItem('krow_comunidad_activa');
+        let usuarioActual = null;
+
+        // Lógica del menú de opciones
+        document.getElementById('btn-opciones').addEventListener('click', () => {
+            const menu = document.getElementById('menu-opciones');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        });
+        window.addEventListener('click', (e) => {
+            if (!e.target.matches('#btn-opciones')) { document.getElementById('menu-opciones').style.display = 'none'; }
+        });
+
+          onAuthStateChanged(auth, async (user) => {
+        if (!user || !comunidadId) { window.location.href = "index.html"; return; }
+
+        usuarioActual = user;
+        localStorage.setItem('krow_comunidad_activa', comunidadId);
+
+        document.getElementById("nav-perfil").href = `perfil.html?id=${comunidadId}`;
+        document.getElementById("nav-chat").href = `chats.html?id=${comunidadId}`;
+        document.getElementById("nav-notif").href = `notificaciones.html?id=${comunidadId}`;
+        document.getElementById("nav-chismes").href = `chismes.html?id=${comunidadId}`;
+        document.getElementById("opcion-lista-personajes").onclick = (e) => {
+    e.preventDefault(); // Evita que la página salte al hacer clic por el href="#"
+    window.location.href = `directorio.html?id=${comunidadId}`;
+};
+
+        try {
+            const docSnap = await getDoc(doc(db, "comunidades", comunidadId));
+            
+            if (docSnap.exists()) {
+                const data = docSnap.data(); 
+
+                const miembroSnap = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${user.uid}`));
+                if (!miembroSnap.exists()) {
+                    if (user.uid === data.creadorId) {
+                        await setDoc(doc(db, `comunidades/${comunidadId}/miembros/${user.uid}`), { alias: "Creador" }, { merge: true });
+                    } else {
+                        Swal.fire({
+                            title: 'Acceso Restringido', text: 'No eres miembro oficial de esta comunidad.', icon: 'warning',
+                            background: '#09090b', color: '#fff', showCancelButton: true,
+                            confirmButtonColor: '#a855f7', cancelButtonColor: '#27272a',
+                            confirmButtonText: '📝 Enviar Solicitud', cancelButtonText: 'Volver al Hub'
+                        }).then((result) => {
+                            window.location.href = result.isConfirmed ? `solicitud.html?id=${comunidadId}` : "hub.html";
+                        });
+                        return; 
+                    }
+                }
+
+                document.getElementById("ui-nombre").textContent = data.titulo;
+                document.getElementById("ui-banner").style.backgroundImage = `url('${data.portada}')`;
+
+                const esAdmin = (user.uid === data.creadorId) || (data.admins && data.admins.includes(user.uid));
+                if(esAdmin) {
+                    document.querySelectorAll('.solo-admin').forEach(el => el.style.display = 'block');
+                    document.getElementById("opcion-lista-usuarios").href = `lista-usuarios.html?id=${comunidadId}`;
+                    document.getElementById("nav-solicitudes").style.display = 'flex';
+                    document.getElementById("nav-solicitudes").href = `bandeja-solicitudes.html?id=${comunidadId}`;
+                    
+                    onSnapshot(query(collection(db, "solicitudes"), where("comunidadId", "==", comunidadId), where("estado", "==", "pendiente")), (snap) => {
+                        const badge = document.getElementById("badge-reclutas-num");
+                        if(snap.size > 0) { badge.textContent = snap.size; badge.style.display = "block"; }
+                        else { badge.style.display = "none"; }
+                    });
+                }
+
+                cargarMisPersonajes();
+                cargarMuroGlobal();
+            } else {
+                window.location.href = "index.html"; 
+            }
+        } catch (error) {
+            Swal.fire('El código falló aquí:', error.message, 'error');
+        }
+    });
+
+              // Función para abandonar la comunidad definitivamente (Aniquilación total)
+        document.getElementById('opcion-salir-definitivo').addEventListener('click', () => {
+            document.getElementById('menu-opciones').style.display = 'none'; // Ocultar menú
+            Swal.fire({
+                title: '¿Abandonar el universo?',
+                text: 'Esto borrará tu membresía y TODOS tus personajes de esta comunidad. Es irreversible.',
+                icon: 'warning',
+                background: '#09090b', color: '#fff',
+                showCancelButton: true, confirmButtonColor: '#be123c', cancelButtonColor: '#27272a',
+                confirmButtonText: 'Sí, borrar todo y salir', cancelButtonText: 'Me quedo'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({title: 'Desintegrando datos...', allowOutsideClick: false, background: '#121216', color: '#fff', didOpen: () => { Swal.showLoading() }});
+                    try {
+                        // 1. Buscar todos los personajes del usuario en esta comunidad
+                        const pjsRef = collection(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes`);
+                        const pjsSnap = await getDocs(pjsRef);
+                        
+                        // 2. Borrar cada personaje uno por uno
+                        for (const pjDoc of pjsSnap.docs) {
+                            await deleteDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${pjDoc.id}`));
+                        }
+
+                        // 3. Borrar el registro del miembro
+                        await deleteDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}`));
+                        
+                        // 4. Limpiar la memoria de la tablet y salir
+                        localStorage.removeItem(`pj_activo_${comunidadId}`);
+                        localStorage.removeItem('krow_comunidad_activa'); // Borramos la huella de la comunidad
+                        window.location.href = "index.html";
+                    } catch (error) {
+                        Swal.fire('Error', 'No se pudo procesar la salida.', 'error');
+                    }
+                }
+            });
+        });
+
+              // Función para que el Creador destruya la comunidad
+        const btnEliminarCom = document.getElementById('opcion-eliminar');
+        
+        if (btnEliminarCom) {
+            btnEliminarCom.addEventListener('click', (e) => {
+                e.preventDefault(); // Evita que el enlace '#' te salte hacia arriba
+                document.getElementById('menu-opciones').style.display = 'none'; // Oculta el menú
+                
+                Swal.fire({
+                    title: '¿Destruir el universo?',
+                    text: 'Esta acción es IRREVERSIBLE. Se borrará la comunidad y expulsará a todos los miembros.',
+                    icon: 'warning',
+                    background: '#09090b', color: '#fff',
+                    showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#27272a',
+                    confirmButtonText: 'Sí, aniquilar todo', cancelButtonText: 'Cancelar'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Desintegrando universo...', 
+                            allowOutsideClick: false, 
+                            background: '#121216', color: '#fff', 
+                            didOpen: () => { Swal.showLoading() }
+                        });
+                        
+                        try {
+                            // Borramos el documento principal de la comunidad
+                            await deleteDoc(doc(db, "comunidades", comunidadId));
+                            
+                            // Limpiamos la memoria local
+                            localStorage.removeItem(`pj_activo_${comunidadId}`);
+                            localStorage.removeItem('krow_comunidad_activa');
+                            
+                            // Lo mandamos de regreso al Hub
+                            window.location.href = "hub.html";
+                        } catch (error) {
+                            Swal.fire({title: 'Error', text: 'El universo se resiste: ' + error.message, icon: 'error', background: '#09090b', color: '#fff'});
+                        }
+                    }
+                });
+            });
+        }
+
+
+        window.cargarMisPersonajes = function() {
+            onSnapshot(collection(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes`), (snapshot) => {
+                let btnMenu = document.getElementById("btn-abrir-personajes");
+                let nuevoBtnMenu = btnMenu.cloneNode(true);
+                btnMenu.parentNode.replaceChild(nuevoBtnMenu, btnMenu);
+                btnMenu = nuevoBtnMenu;
+
+                document.getElementById("ui-pj-contador").textContent = `Personajes: ${snapshot.size}/5`;
+
+                let listaHTML = '';
+                let pjActualId = localStorage.getItem(`pj_activo_${comunidadId}`);
+                let pjEncontrado = false;
+
+                snapshot.forEach(docSnap => {
+                    const pj = docSnap.data();
+                    const esActivo = docSnap.id === pjActualId;
+                    if(esActivo) {
+                        pjEncontrado = true;
+                        document.getElementById("ui-pj-avatar").style.backgroundImage = `url('${pj.avatarUrl}')`;
+                        document.getElementById("ui-pj-nombre").textContent = pj.nombre;
+                    }
+                    
+                    listaHTML += `
+                        <div class="pj-item ${esActivo ? 'activo' : ''}" onclick="seleccionarPj('${docSnap.id}')">
+                            <div class="pj-avatar" style="background-image: url('${pj.avatarUrl}')"></div>
+                            <div class="pj-nombre">${pj.nombre}</div>
+                            ${esActivo ? '<div class="pj-check">✓</div>' : ''}
+                        </div>
+                    `;
+                });
+
+                if(!pjEncontrado && snapshot.size > 0) {
+                    localStorage.removeItem(`pj_activo_${comunidadId}`);
+                    document.getElementById("ui-pj-avatar").style.backgroundImage = `url('')`;
+                    document.getElementById("ui-pj-nombre").textContent = "Modo Espectador";
+                }
+
+                let btnCrearHTML = '';
+                if(snapshot.size < 5) {
+                    btnCrearHTML = `<button onclick="crearPersonaje()" style="width: 100%; padding: 12px; margin-top: 15px; background: #a855f7; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">+ Crear Nuevo Avatar</button>`;
+                } else {
+                    btnCrearHTML = `<div style="text-align: center; color: #a1a1aa; margin-top: 15px; font-size: 0.85rem;">Límite de avatares alcanzado</div>`;
+                }
+
+                btnMenu.addEventListener('click', () => {
+                    Swal.fire({
+                        title: 'Mis Personajes',
+                        html: `<div style="text-align: left; font-size: 0.9rem; color: #a1a1aa; margin-bottom: 10px;">Elige tu avatar activo (Máx. 5)</div>
+                               <div style="max-height: 300px; overflow-y: auto;">${listaHTML}</div>
+                               ${btnCrearHTML}`,
+                        showConfirmButton: false,
+                        background: '#09090b', color: '#fff', showCloseButton: true
+                    });
+                });
+            });
+        }
+
+        window.seleccionarPj = function(id) {
+            localStorage.setItem(`pj_activo_${comunidadId}`, id);
+            Swal.close();
+            window.location.reload(); 
+        }
+
+        window.crearPersonaje = async function() {
+            Swal.close();
+            const { value: formValues } = await Swal.fire({
+                title: 'Crear Avatar',
+                html: `
+                    <input id="swal-pj-nombre" class="swal2-input" placeholder="Nombre completo" style="background: #121216; color: #fff; border: 1px solid #27272a;">
+                    <input id="swal-pj-avatar" class="swal2-input" placeholder="Link del avatar (ej. Catbox)" style="background: #121216; color: #fff; border: 1px solid #27272a;">
+                `,
+                focusConfirm: false, background: '#09090b', color: '#fff', confirmButtonColor: '#a855f7', confirmButtonText: 'Dar vida', showCancelButton: true,
+                preConfirm: () => {
+                    const n = document.getElementById('swal-pj-nombre').value;
+                    const a = document.getElementById('swal-pj-avatar').value;
+                    if (!n || !a) { Swal.showValidationMessage('Todos los campos son obligatorios'); return false; }
+                    return { nombre: n, avatarUrl: a }
+                }
+            });
+
+            if (formValues) {
+                Swal.fire({title: 'Manifestando...', allowOutsideClick: false, background: '#121216', color: '#fff', didOpen: () => { Swal.showLoading() }});
+                try {
+                    const docRef = await addDoc(collection(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes`), formValues);
+                    localStorage.setItem(`pj_activo_${comunidadId}`, docRef.id);
+                    Swal.fire({title: '¡Avatar Creado!', icon: 'success', background: '#09090b', color: '#fff', timer: 1500, showConfirmButton: false}).then(() => {
+                        window.location.reload();
+                    });
+                } catch (error) {
+                    Swal.fire('Error', error.message, 'error');
+                }
+            }
+        }
+
+              window.toggleLike = async function(postId, tieneMiLike) {
+            // Obtenemos al personaje y validamos
+            const pjActualId = localStorage.getItem(`pj_activo_${comunidadId}`);
+            if(!pjActualId) return Swal.fire('Espectador', 'Necesitas un personaje activo para dar like.', 'warning');
+
+            const postRef = doc(db, `comunidades/${comunidadId}/feed/${postId}`);
+            try {
+                if (tieneMiLike) {
+                    // Quitamos el ID del personaje (Quitar Like)
+                    await updateDoc(postRef, { likes: arrayRemove(pjActualId) });
+                } else {
+                    // Agregamos el ID del personaje (Dar Like)
+                    await updateDoc(postRef, { likes: arrayUnion(pjActualId) });
+
+                    // --- CARTERO DE NOTIFICACIÓN DE LIKE ---
+                    const postSnap = await getDoc(postRef);
+                    if (postSnap.exists()) {
+                        const postData = postSnap.data();
+                        
+                        // Si el post no es tuyo, enviamos la alerta al autor
+                        if (postData.autorId !== pjActualId) {
+                            const miSnap = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${pjActualId}`));
+                            const nombreFan = miSnap.exists() ? miSnap.data().nombre : 'Alguien';
+                            const avatarFan = miSnap.exists() ? (miSnap.data().avatarUrl || "") : "";
+
+                            await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
+                                tipo: 'like',
+                                titulo: 'Nuevo Me Gusta ❤️',
+                                mensaje: `${nombreFan} ha reaccionado a tu publicación.`,
+                                receptorId: postData.autorId,
+                                avatarUrl: avatarFan,
+                                link: `comunidad.html?id=${comunidadId}`,
+                                leida: false,
+                                timestamp: serverTimestamp()
+                            });
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error con el like:", error);
+            }
+        }
+
+
+              window.cargarMuroGlobal = function() {
+            onSnapshot(query(collection(db, `comunidades/${comunidadId}/feed`), orderBy("timestamp", "desc")), (snapshot) => {
+                const muro = document.getElementById('muro-global');
+                muro.innerHTML = ''; 
+                
+                if(snapshot.empty) { 
+                    muro.innerHTML = `<div style="text-align:center; color:#a1a1aa; padding: 20px;">Aún no hay publicaciones en este universo. Rompe el hielo.</div>`; 
+                    return; 
+                }
+
+                // Extraemos el ID del personaje activo
+                const pjActualId = localStorage.getItem(`pj_activo_${comunidadId}`);
+
+                snapshot.forEach(docSnap => {
+                    const post = docSnap.data();
+                    const postId = docSnap.id;
+                    
+                    // Lógica de Likes (ahora busca el ID del personaje, no del usuario)
+                    const likesArr = post.likes || [];
+                    const tieneMiLike = pjActualId ? likesArr.includes(pjActualId) : false;
+                    const numLikes = likesArr.length;
+                    const iconoLike = tieneMiLike ? '❤️' : '🤍';
+                    const colorLike = tieneMiLike ? '#be123c' : '#a1a1aa';
+
+                    const numComentarios = post.contadorComentarios || 0;
+                    
+                    muro.innerHTML += `
+                        <div style="background: #18181b; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid #27272a;">
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 15px;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background-image: url('${post.autorAvatar}'); background-size: cover; background-position: center;"></div>
+                                <div style="font-weight: 700; font-size: 1.1rem;">${post.autorNombre}</div>
+                            </div>
+                            
+                            <div style="width: 100%; max-height: 500px; background-color: #000; display: flex; align-items: center; justify-content: center;">
+                                <img src="${post.imagenUrl}" style="max-width: 100%; max-height: 500px; object-fit: contain;">
+                            </div>
+                            
+                            <div style="padding: 15px;">
+                                <div style="margin-bottom: 15px; line-height: 1.4; font-size: 0.95rem;">${post.texto}</div>
+                                <div style="display: flex; gap: 15px; border-top: 1px solid #27272a; padding-top: 15px;">
+                                    <button onclick="toggleLike('${postId}', ${tieneMiLike})" style="background: transparent; border: none; color: ${colorLike}; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; padding: 0;">
+                                        ${iconoLike} ${numLikes > 0 ? numLikes : 'Me gusta'}
+                                    </button>
+                                    <button onclick="abrirComentarios('${postId}')" style="background: transparent; border: none; color: #a1a1aa; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; padding: 0;">
+                                        💬 ${numComentarios > 0 ? numComentarios : 'Comentar'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        };
+
+
+        window.abrirComentarios = function(postId) {
+            let pjActualId = localStorage.getItem(`pj_activo_${comunidadId}`);
+            if (!pjActualId) return Swal.fire('Espectador', 'Necesitas un avatar activo para interactuar.', 'warning');
+            
+            let nombrePj = document.getElementById("ui-pj-nombre").textContent;
+            let avatarPj = document.getElementById("ui-pj-avatar").style.backgroundImage.slice(5, -2); // Limpia el url("")
+
+            Swal.fire({
+                title: 'Comentarios',
+                html: `
+                    <div id="lista-comentarios" style="max-height: 300px; overflow-y: auto; text-align: left; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="text-align:center; color:#a1a1aa; font-size: 0.85rem;">Cargando...</div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <input id="swal-input-comentario" class="swal2-input" placeholder="Escribe un comentario..." style="margin: 0; background: #121216; color: #fff; border: 1px solid #27272a; flex-grow: 1;">
+                        <button onclick="enviarComentario('${postId}', '${nombrePj}', '${avatarPj}')" style="background: #a855f7; color: white; border: none; border-radius: 8px; padding: 0 15px; font-weight: bold; cursor: pointer;">Enviar</button>
+                    </div>
+                `,
+                showConfirmButton: false, showCloseButton: true, background: '#09090b', color: '#fff',
+                didOpen: () => {
+                    window.unsubscribeComentarios = onSnapshot(query(collection(db, `comunidades/${comunidadId}/feed/${postId}/comentarios`), orderBy("timestamp", "asc")), (snap) => {
+                        const contenedor = document.getElementById('lista-comentarios');
+                        if(snap.empty) {
+                            contenedor.innerHTML = '<div style="text-align:center; color:#a1a1aa; font-size: 0.85rem; padding: 20px 0;">Sé el primero en comentar.</div>';
+                            return;
+                        }
+                        contenedor.innerHTML = '';
+                        snap.forEach(cSnap => {
+                            const com = cSnap.data();
+                            contenedor.innerHTML += `
+                                <div style="display: flex; gap: 10px; background: #18181b; padding: 10px; border-radius: 8px; border: 1px solid #27272a;">
+                                    <div style="width: 30px; height: 30px; border-radius: 50%; background-image: url('${com.autorAvatar}'); background-size: cover; background-position: center; flex-shrink: 0;"></div>
+                                    <div>
+                                        <div style="font-weight: bold; font-size: 0.85rem; color: #a855f7;">${com.autorNombre}</div>
+                                        <div style="font-size: 0.9rem; margin-top: 2px;">${com.texto}</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        contenedor.scrollTop = contenedor.scrollHeight;
+                    });
+                },
+                willClose: () => { if(window.unsubscribeComentarios) window.unsubscribeComentarios(); }
+            });
+        };
+
+              window.enviarComentario = async function(postId, autorNombre, autorAvatar) {
+            const input = document.getElementById('swal-input-comentario');
+            const texto = input.value.trim();
+            if(!texto) return;
+
+            input.value = '';
+            input.disabled = true;
+
+            try {
+                // 1. Guardamos el comentario
+                await addDoc(collection(db, `comunidades/${comunidadId}/feed/${postId}/comentarios`), {
+                    autorId: usuarioActual.uid,
+                    autorNombre: autorNombre,
+                    autorAvatar: autorAvatar,
+                    texto: texto,
+                    timestamp: serverTimestamp()
+                });
+
+                const postRef = doc(db, `comunidades/${comunidadId}/feed/${postId}`);
+                const postSnap = await getDoc(postRef);
+                if(postSnap.exists()) {
+                    const postData = postSnap.data();
+                    let currentCount = postData.contadorComentarios || 0;
+                    
+                    // 2. Actualizamos el contador de comentarios
+                    await updateDoc(postRef, { contadorComentarios: currentCount + 1 });
+
+                    // --- 3. CARTERO DE NOTIFICACIÓN DE COMENTARIO ---
+                    const pjActualId = localStorage.getItem(`pj_activo_${comunidadId}`);
+                    if (postData.autorId !== pjActualId) {
+                        const miSnap = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${pjActualId}`));
+                        const nombreComentarista = miSnap.exists() ? miSnap.data().nombre : 'Alguien';
+                        const avatarComentarista = miSnap.exists() ? (miSnap.data().avatarUrl || "") : "";
+
+                        await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
+                            tipo: 'comentario',
+                            titulo: 'Nuevo Comentario 💬',
+                            mensaje: `${nombreComentarista} ha comentado en tu publicación.`,
+                            receptorId: postData.autorId,
+                            avatarUrl: avatarComentarista,
+                            link: `comunidad.html?id=${comunidadId}`,
+                            leida: false,
+                            timestamp: serverTimestamp()
+                        });
+                    }
+                }
+            } catch(error) {
+                Swal.showValidationMessage('Error al enviar el mensaje');
+            }
+
+            input.disabled = false;
+            input.focus();
+        };
+
+
+              function vigilarCampanita() {
+            const pjActivoId = localStorage.getItem(`pj_activo_${comunidadId}`);
+            if (!pjActivoId) return;
+            
+            const notisRef = query(collection(db, `comunidades/${comunidadId}/notificaciones`), where("receptorId", "in", [pjActivoId, "todos"]));
+                                   
+            onSnapshot(notisRef, (snap) => {
+                const badge = document.getElementById("badge-notif");
+                if (!badge) return;
+                
+                let noLeidas = 0;
+                snap.forEach(docSnap => {
+                    if (docSnap.data().leida === false) noLeidas++;
+                });
+                
+                if (noLeidas > 0) {
+                    badge.style.display = "flex";
+                    badge.textContent = noLeidas > 99 ? '99+' : noLeidas;
+                } else {
+                    badge.style.display = "none";
+                }
+            });
+        }
+
+        vigilarCampanita();
+
+    </script>
+</body>
+</html>

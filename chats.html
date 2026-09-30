@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Chats - Krow</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: #09090b; color: #e0e0e0; padding-bottom: 80px; }
+
+        header { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background-color: #121216; border-bottom: 1px solid #27272a; position: sticky; top: 0; z-index: 100; }
+        .header-izq { display: flex; align-items: center; gap: 15px; }
+        .btn-volver { color: #a1a1aa; text-decoration: none; font-size: 1.2rem; }
+        h1 { margin: 0; font-size: 1.2rem; color: #fff; font-weight: 700; }
+        
+        .btn-crear { background-color: #fff; color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: none; }
+
+        .tabs { display: flex; border-bottom: 1px solid #27272a; background-color: #121216; }
+        .tab { flex: 1; text-align: center; padding: 12px; color: #a1a1aa; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; font-size: 0.9rem; }
+        .tab.activo { color: #a855f7; border-bottom-color: #a855f7; }
+        
+        .tab-content { display: none; padding: 20px; }
+        .tab-content.activo { display: block; }
+
+        .chat-card { background-color: #121216; border: 1px solid #27272a; border-radius: 12px; padding: 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; transition: transform 0.2s; }
+        .chat-card:hover { transform: translateY(-2px); border-color: #52525b; }
+        
+        .chat-info { flex: 1; padding-right: 10px; }
+        .chat-info h3 { margin: 0 0 5px 0; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;}
+        .chat-info p { margin: 0; color: #a1a1aa; font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
+        
+        .badge-general { background-color: #3f3f46; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; }
+        .badge-privado { background-color: #7f1d1d; color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; }
+
+        .btn-accion { padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; text-decoration: none; cursor: pointer; border: none; text-align: center; flex-shrink: 0;}
+        .btn-entrar { background-color: #a855f7; color: #fff; }
+        .btn-solicitar { background-color: #27272a; color: #fff; border: 1px solid #52525b; }
+        .btn-pendiente { background-color: #18181b; color: #71717a; border: 1px dashed #3f3f46; cursor: not-allowed; }
+
+        .solicitud-item { background: #18181b; border: 1px solid #3f3f46; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+        .solicitud-info span { color: #a855f7; font-weight: bold; }
+        .solicitud-botones { display: flex; gap: 8px; }
+        .btn-aprobar { background: #22c55e; color: #000; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer;}
+        .btn-rechazar { background: #ef4444; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer;}
+
+        .mensaje-vacio { text-align: center; color: #71717a; padding: 40px 20px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-izq">
+            <a href="#" class="btn-volver" id="btn-volver">←</a>
+            <h1>Centro de Chats</h1>
+        </div>
+        <button class="btn-crear" id="btn-crear-grupo">+ Nuevo Grupo</button>
+    </header>
+
+    <div class="tabs">
+        <div class="tab activo" onclick="cambiarTab('grupos')">Grupos de Rol</div>
+        <div class="tab" onclick="cambiarTab('privados')">Privados</div>
+        <div class="tab solo-admin" id="tab-solicitudes" onclick="cambiarTab('solicitudes')" style="display: none;">Peticiones <span id="badge-peticiones" style="color:#a855f7;">(0)</span></div>
+    </div>
+
+    <!-- PESTAÑA 1: GRUPOS -->
+    <div class="tab-content activo" id="tab-grupos">
+        <div class="chat-card">
+            <div class="chat-info">
+                <h3>Sala Principal <span class="badge-general">GENERAL</span></h3>
+                <p>El chat principal del universo. Todos tienen acceso.</p>
+            </div>
+            <a href="#" class="btn-accion btn-entrar" id="btn-entrar-general">Entrar</a>
+        </div>
+
+        <h3 style="color: #fff; margin-top: 30px; font-size: 1rem; border-bottom: 1px solid #27272a; padding-bottom: 5px;">Salas Secundarias</h3>
+        <div id="lista-grupos"><div class="mensaje-vacio">Buscando salas...</div></div>
+    </div>
+
+  <div class="tab-content" id="tab-privados">
+    <div id="contenedor-privados">
+        <div class="mensaje-vacio">Cargando chats privados...</div>
+    </div>
+</div>
+
+    
+    <!-- PESTAÑA 3: SOLICITUDES -->
+    <div class="tab-content" id="tab-solicitudes-content">
+        <div id="lista-solicitudes"><div class="mensaje-vacio">No hay peticiones pendientes.</div></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, addDoc, onSnapshot, query, where, updateDoc, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3_P-prlT0bmm8bREQ2g4uLaDamTRHnGI",
+            authDomain: "krow-83002.firebaseapp.com",
+            projectId: "krow-83002",
+            storageBucket: "krow-83002.firebasestorage.app",
+            messagingSenderId: "567485047347",
+            appId: "1:567485047347:web:87fbf4a8b44a657061b946"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const comunidadId = urlParams.get('id');
+        let usuarioActual = null;
+        let esAdmin = false;
+        let misSolicitudesPendientes = []; 
+
+        document.getElementById("btn-volver").href = `comunidad.html?id=${comunidadId}`;
+        document.getElementById("btn-entrar-general").href = `chat-grupal.html?id=${comunidadId}`;
+
+        window.cambiarTab = (tabName) => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('activo'));
+            event.target.classList.add('activo');
+            if(tabName === 'grupos') document.getElementById('tab-grupos').classList.add('activo');
+            if(tabName === 'privados') document.getElementById('tab-privados').classList.add('activo');
+            if(tabName === 'solicitudes') document.getElementById('tab-solicitudes-content').classList.add('activo');
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user && comunidadId) {
+                usuarioActual = user;
+                verificarRolYCargar();
+            } else { window.location.href = "index.html"; }
+        });
+
+        async function verificarRolYCargar() {
+            const docSnap = await getDoc(doc(db, "comunidades", comunidadId));
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                esAdmin = (usuarioActual.uid === data.creadorId) || (data.admins && data.admins.includes(usuarioActual.uid));
+                
+                if (esAdmin) {
+                    document.getElementById("btn-crear-grupo").style.display = "block";
+                    document.getElementById("tab-solicitudes").style.display = "block";
+                    escucharSolicitudesAdmin();
+                }
+                escucharMisPeticiones();
+                escucharGrupos();
+                escucharChatsPrivados(); 
+
+            }
+        }
+
+        document.getElementById("btn-crear-grupo").addEventListener("click", async () => {
+            const { value: formValues } = await Swal.fire({
+                title: 'Crear Sala Secundaria',
+                html: `<input id="swal-nombre" class="swal2-input" placeholder="Nombre (Ej. La Taberna)" style="background:#121216; color:#fff; border:1px solid #27272a;">
+                       <input id="swal-desc" class="swal2-input" placeholder="Descripción breve" style="background:#121216; color:#fff; border:1px solid #27272a;">`,
+                background: '#09090b', color: '#fff', confirmButtonColor: '#fff', confirmButtonText: '<span style="color:#000;">Forjar Sala</span>', showCancelButton: true,
+                preConfirm: () => [document.getElementById('swal-nombre').value, document.getElementById('swal-desc').value]
+            });
+
+            if (formValues && formValues[0]) {
+                await addDoc(collection(db, "comunidades", comunidadId, "salasExtras"), {
+                    nombre: formValues[0], descripcion: formValues[1], creadorId: usuarioActual.uid,
+                    miembros: [usuarioActual.uid], timestamp: serverTimestamp()
+                });
+            }
+        });
+
+        function escucharMisPeticiones() {
+            const q = query(collection(db, "comunidades", comunidadId, "peticionesSalas"), where("solicitanteId", "==", usuarioActual.uid), where("estado", "==", "pendiente"));
+            onSnapshot(q, (snap) => {
+                misSolicitudesPendientes = [];
+                snap.forEach(doc => misSolicitudesPendientes.push(doc.data().salaId));
+                renderGrupos(); 
+            });
+        }
+
+        let gruposGlobales = [];
+        function escucharGrupos() {
+            onSnapshot(collection(db, "comunidades", comunidadId, "salasExtras"), (snap) => {
+                gruposGlobales = [];
+                snap.forEach(doc => gruposGlobales.push({id: doc.id, ...doc.data()}));
+                renderGrupos();
+            });
+        }
+
+        function renderGrupos() {
+            const div = document.getElementById("lista-grupos");
+            div.innerHTML = "";
+            if(gruposGlobales.length === 0) { div.innerHTML = `<div class="mensaje-vacio">No hay salas creadas aún.</div>`; return; }
+
+            gruposGlobales.forEach(grupo => {
+                const soyMiembro = grupo.miembros && grupo.miembros.includes(usuarioActual.uid);
+                const yaSolicite = misSolicitudesPendientes.includes(grupo.id);
+
+                let botonHtml = "";
+                if (soyMiembro || esAdmin) {
+                    botonHtml = `<a href="chat-grupal.html?id=${comunidadId}&salaId=${grupo.id}" class="btn-accion btn-entrar">Entrar</a>`;
+                } else if (yaSolicite) {
+                    botonHtml = `<button class="btn-accion btn-pendiente" disabled>En revisión</button>`;
+                } else {
+                    botonHtml = `<button class="btn-accion btn-solicitar" onclick="solicitarAcceso('${grupo.id}', '${grupo.nombre}')">Pedir Acceso</button>`;
+                }
+
+                div.innerHTML += `
+                    <div class="chat-card">
+                        <div class="chat-info"><h3>${grupo.nombre} <span class="badge-privado">CERRADO</span></h3><p>${grupo.descripcion}</p></div>
+                        ${botonHtml}
+                    </div>`;
+            });
+        }
+
+        window.solicitarAcceso = async (salaId, salaNombre) => {
+            const pjActivoId = localStorage.getItem(`pj_activo_${comunidadId}`);
+            if (!pjActivoId) { Swal.fire({title: 'Atención', text: 'Ve a la comunidad y selecciona un personaje primero.', background: '#121216', color: '#fff'}); return; }
+
+            const pjRef = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${pjActivoId}`));
+            const pjNombre = pjRef.exists() ? pjRef.data().nombre : "Tu Personaje";
+
+            const c = await Swal.fire({ title: 'Pedir Acceso', text: `¿Solicitar entrar a "${salaNombre}" como ${pjNombre}?`, background: '#121216', color: '#fff', showCancelButton: true, confirmButtonColor: '#a855f7', confirmButtonText: 'Sí, solicitar' });
+
+            if(c.isConfirmed) {
+                await addDoc(collection(db, "comunidades", comunidadId, "peticionesSalas"), {
+                    salaId: salaId, salaNombre: salaNombre, solicitanteId: usuarioActual.uid, solicitanteAlias: pjNombre, estado: "pendiente", timestamp: serverTimestamp()
+                });
+                Swal.fire({title: 'Enviado', icon:'success', background: '#09090b', color: '#fff', timer: 1000, showConfirmButton:false});
+            }
+        };
+
+        function escucharSolicitudesAdmin() {
+            const q = query(collection(db, "comunidades", comunidadId, "peticionesSalas"), where("estado", "==", "pendiente"));
+            onSnapshot(q, (snap) => {
+                document.getElementById("badge-peticiones").textContent = `(${snap.size})`;
+                const div = document.getElementById("lista-solicitudes");
+                div.innerHTML = "";
+                if(snap.empty) { div.innerHTML = `<div class="mensaje-vacio">No hay peticiones pendientes.</div>`; return; }
+
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    div.innerHTML += `
+                        <div class="solicitud-item">
+                            <div class="solicitud-info"><div>El usuario <b>${data.solicitanteAlias}</b> pide entrar a:</div><span>${data.salaNombre}</span></div>
+                            <div class="solicitud-botones">
+                                <button class="btn-aprobar" onclick="responderSolicitud('${docSnap.id}', '${data.salaId}', '${data.solicitanteId}', 'aprobada')">✔</button>
+                                <button class="btn-rechazar" onclick="responderSolicitud('${docSnap.id}', '', '', 'rechazada')">✖</button>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        window.responderSolicitud = async (peticionId, salaId, usuarioId, respuesta) => {
+            await updateDoc(doc(db, "comunidades", comunidadId, "peticionesSalas", peticionId), { estado: respuesta });
+            if(respuesta === 'aprobada') {
+                await updateDoc(doc(db, "comunidades", comunidadId, "salasExtras", salaId), { miembros: arrayUnion(usuarioId) });
+            }
+        };
+
+         function escucharChatsPrivados() {
+       const contenedor = document.getElementById('contenedor-privados');
+       if (!contenedor) return;
+       const miPjId = localStorage.getItem(`pj_activo_${comunidadId}`);
+
+       // IMPORTANTE: Ahora filtramos para que solo veas TUS chats, no los de todos
+       const chatsRef = query(collection(db, `comunidades/${comunidadId}/chatsPrivados`), where("participantes", "array-contains", miPjId));
+       
+       onSnapshot(chatsRef, (snapshot) => {
+           contenedor.innerHTML = "";
+
+           if (snapshot.empty) {
+               contenedor.innerHTML = '<div class="mensaje-vacio">No hay chats privados iniciados aún. Visita perfiles para iniciar un rol.</div>';
+               return;
+           }
+
+           snapshot.forEach((docSnap) => {
+               const chat = docSnap.data();
+               
+               // Averiguamos quién es el OTRO participante
+               let nombreOtro = "Desconocido";
+               let avatarOtro = "https://via.placeholder.com/40";
+               
+               if (chat.infoParticipantes) {
+                   const otroId = chat.participantes.find(id => id !== miPjId);
+                   if (otroId && chat.infoParticipantes[otroId]) {
+                       nombreOtro = chat.infoParticipantes[otroId].nombre || "Desconocido";
+                       if (chat.infoParticipantes[otroId].avatar) avatarOtro = chat.infoParticipantes[otroId].avatar;
+                   }
+               }
+               
+               const card = document.createElement('div');
+               card.className = "chat-card";
+               card.style.cssText = "padding: 15px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;";
+               
+               card.innerHTML = `
+                   <div style="display: flex; align-items: center; gap: 12px;">
+                       <div style="width: 45px; height: 45px; border-radius: 50%; background-image: url('${avatarOtro}'); background-size: cover; background-position: center;"></div>
+                       <div>
+                           <h3 style="margin: 0; color: #fff; font-size: 1rem;">${nombreOtro}</h3>
+                           <p style="margin: 5px 0 0 0; color: #a1a1aa; font-size: 0.75rem;">Sala Privada</p>
+                       </div>
+                   </div>
+                   <span style="color: #a855f7; font-weight: 600; font-size: 0.9rem;">Entrar &rarr;</span>
+               `;
+               
+               card.onclick = () => {
+                   window.location.href = `sala-chat.html?id=${comunidadId}&chat=${chat.chatId}&miUid=${usuarioActual.uid}&miPj=${miPjId}`;
+               };
+
+               contenedor.appendChild(card);
+           });
+       });
+   }
+
+
+    </script>
+</body>
+</html>

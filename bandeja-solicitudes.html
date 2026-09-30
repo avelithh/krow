@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bandeja de Reclutas - Krow</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b;
+            color: #e0e0e0;
+            padding: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- CABECERA --- */
+        header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #1f1f23;
+        }
+
+        .btn-volver {
+            background-color: #121216; border: 1px solid #27272a;
+            color: #fff; padding: 8px 15px; border-radius: 8px;
+            text-decoration: none; font-weight: 600; font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .btn-volver:hover { background-color: #18181b; }
+
+        .header-textos h1 { margin: 0; font-size: 1.5rem; font-weight: 800; color: #fff; }
+        .header-textos p { margin: 2px 0 0 0; color: #a1a1aa; font-size: 0.9rem; }
+
+        /* --- LISTA DE SOLICITUDES --- */
+        .contenedor-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .tarjeta-solicitud {
+            background-color: #121216;
+            border: 1px solid #27272a;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s, border-color 0.2s;
+            text-decoration: none;
+        }
+
+        .tarjeta-solicitud:hover {
+            transform: translateY(-2px);
+            border-color: #52525b;
+            background-color: #18181b;
+        }
+
+        .info-recluta h3 {
+            margin: 0 0 5px 0; color: #fff; font-size: 1.1rem; font-weight: 600;
+        }
+        .info-recluta p {
+            margin: 0; color: #a1a1aa; font-size: 0.85rem;
+        }
+        .info-recluta span {
+            color: #d4d4d8; font-weight: 500;
+        }
+
+        .estado-badge {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .mensaje-vacio {
+            text-align: center; color: #71717a; padding: 40px 20px;
+            background-color: #121216; border-radius: 12px; border: 1px dashed #27272a;
+        }
+
+        @media(max-width: 600px) {
+            .tarjeta-solicitud { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .estado-badge { align-self: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="#" class="btn-volver" id="btn-volver">← Volver</a>
+        <div class="header-textos">
+            <h1>Centro de Reclutamiento</h1>
+            <p>Evalúa a los aspirantes que desean unirse a tu universo.</p>
+        </div>
+    </header>
+
+    <div class="contenedor-lista" id="lista-solicitudes">
+        <div class="mensaje-vacio">Buscando expedientes...</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3_P-prlT0bmm8bREQ2g4uLaDamTRHnGI",
+            authDomain: "krow-83002.firebaseapp.com",
+            projectId: "krow-83002",
+            storageBucket: "krow-83002.firebasestorage.app",
+            messagingSenderId: "567485047347",
+            appId: "1:567485047347:web:87fbf4a8b44a657061b946"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Obtener la comunidad actual de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const comunidadId = urlParams.get('id');
+
+        const listaSolicitudes = document.getElementById("lista-solicitudes");
+        const btnVolver = document.getElementById("btn-volver");
+
+        // Configurar botón de volver al muro
+        if(comunidadId) {
+            btnVolver.href = `comunidad.html?id=${comunidadId}`;
+        } else {
+            btnVolver.href = "hub.html";
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user && comunidadId) {
+                cargarSolicitudes();
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        async function cargarSolicitudes() {
+            try {
+                // Pedimos TODAS las solicitudes de esta comunidad
+                const q = query(collection(db, "solicitudes"), where("comunidadId", "==", comunidadId));
+                const querySnapshot = await getDocs(q);
+
+                listaSolicitudes.innerHTML = "";
+
+                // Filtramos manualmente solo las "pendientes" (para evitar errores de indexación en Firebase al inicio)
+                const solicitudesPendientes = [];
+                querySnapshot.forEach((doc) => {
+                    if(doc.data().estado === "pendiente") {
+                        solicitudesPendientes.push({ id: doc.id, ...doc.data() });
+                    }
+                });
+
+                if (solicitudesPendientes.length === 0) {
+                    listaSolicitudes.innerHTML = `
+                        <div class="mensaje-vacio">
+                            <h3>Sin novedades</h3>
+                            <p>No hay reclutas pendientes de evaluación en este momento.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Dibujar cada solicitud
+                solicitudesPendientes.forEach((solicitud) => {
+                    const linkChat = `chat-solicitud.html?solicitudId=${solicitud.id}&comunidadId=${comunidadId}`;
+                    
+                    const tarjeta = document.createElement("a");
+                    tarjeta.href = linkChat;
+                    tarjeta.className = "tarjeta-solicitud";
+                    
+                    tarjeta.innerHTML = `
+                        <div class="info-recluta">
+                            <h3>${solicitud.alias}</h3>
+                            <p>Propuesta de personaje: <span>${solicitud.personaje}</span></p>
+                        </div>
+                        <div class="estado-badge">Evaluar ➔</div>
+                    `;
+                    
+                    listaSolicitudes.appendChild(tarjeta);
+                });
+
+            } catch (error) {
+                console.error("Error cargando solicitudes:", error);
+                listaSolicitudes.innerHTML = '<div class="mensaje-vacio" style="color: #f87171;">Hubo un error al cargar los datos.</div>';
+            }
+        }
+    </script>
+</body>
+</html>

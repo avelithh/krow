@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hub - Krow Roleplay</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b;
+            color: #e0e0e0;
+            padding-bottom: 50px;
+        }
+
+        /* --- BARRA DE NAVEGACIÓN --- */
+        header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 40px; background-color: rgba(9, 9, 11, 0.85);
+            backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            position: sticky; top: 0; z-index: 100; gap: 30px;
+        }
+
+        .logo-nav { font-size: 1.6rem; font-weight: 800; color: #ffffff; letter-spacing: -1.5px; flex-shrink: 0; }
+
+        .buscador-nav { flex: 1; max-width: 500px; position: relative; }
+        .buscador-nav input {
+            width: 100%; background-color: #121216; border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px; padding: 12px 15px 12px 40px; color: #fff;
+            font-family: 'Inter', sans-serif; font-size: 0.9rem; outline: none;
+            transition: all 0.3s ease; box-sizing: border-box;
+        }
+        .buscador-nav input:focus {
+            border-color: rgba(255, 255, 255, 0.3); background-color: #18181b;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.03);
+        }
+        .buscador-nav svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; fill: #71717a; }
+
+        .nav-acciones { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+        .btn-crear {
+            background-color: #ffffff; color: #000000; border: none; padding: 11px 20px;
+            border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+        }
+        .btn-crear:hover { background-color: #f4f4f5; }
+        .btn-crear:active { transform: scale(0.96); }
+
+        /* PERFIL MENU */
+        .perfil-menu-container { position: relative; cursor: pointer; }
+        .avatar-usuario {
+            width: 40px; height: 40px; background-color: #18181b; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: 700;
+            color: #fff; border: 2px solid rgba(255, 255, 255, 0.1); overflow: hidden; transition: border-color 0.3s;
+        }
+        .avatar-usuario:hover { border-color: rgba(255, 255, 255, 0.4); }
+        .avatar-usuario img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .dropdown-perfil {
+            display: none; position: absolute; right: 0; top: 55px; background-color: #121216;
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; width: 180px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.9); overflow: hidden;
+        }
+        .dropdown-perfil.activo { display: block; }
+        .dropdown-item {
+            padding: 12px 16px; font-size: 0.9rem; color: #d4d4d8; text-decoration: none; display: block; transition: background 0.2s;
+        }
+        .dropdown-item:hover { background-color: #1f1f23; color: #fff; }
+        .dropdown-item.logout { color: #f87171; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        main { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        section h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 25px; color: #f4f4f5; letter-spacing: -0.5px;}
+        
+        .grid-universos { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; margin-bottom: 50px; }
+        .mensaje-vacio { color: #71717a; font-size: 0.95rem; font-style: italic; grid-column: 1 / -1; margin-top: 10px; }
+
+        /* TARJETAS DE UNIVERSOS */
+        .tarjeta-universo {
+            background-color: #121216; border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px; overflow: hidden; display: flex; flex-direction: column;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .tarjeta-universo:hover { transform: translateY(-4px); border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .tarjeta-portada { height: 160px; background-size: cover; background-position: center; background-color: #18181b; }
+        .tarjeta-contenido { padding: 22px; display: flex; flex-direction: column; flex: 1; }
+        
+        .tags-container { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .tag {
+            background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #a1a1aa; font-size: 0.7rem; padding: 4px 10px; border-radius: 6px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.8px;
+        }
+        
+        .tarjeta-contenido h3 { margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 700; color: #fff; letter-spacing: -0.3px;}
+        .tarjeta-contenido p { margin: 0 0 22px 0; font-size: 0.9rem; color: #a1a1aa; line-height: 1.5; flex: 1; }
+        
+        /* BOTONES DINÁMICOS EN TARJETAS */
+        .btn-accion-tarjeta {
+            width: 100%; border: 1px solid rgba(255, 255, 255, 0.08); padding: 12px; border-radius: 8px;
+            font-weight: 600; font-size: 0.9rem; cursor: pointer; text-align: center; 
+            transition: all 0.2s ease; text-decoration: none; box-sizing: border-box;
+        }
+        .btn-accion-tarjeta.btn-entrar { background-color: #18181b; color: #fff; }
+        .btn-accion-tarjeta.btn-entrar:hover { background-color: #27272a; border-color: rgba(255, 255, 255, 0.2); }
+        
+        .btn-accion-tarjeta.btn-unirse { background-color: #7f1d1d; color: #fff; border-color: #991b1b; }
+        .btn-accion-tarjeta.btn-unirse:hover { background-color: #991b1b; border-color: #b91c1c; }
+
+        /* --- MODAL CINEMATOGRÁFICO --- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(5, 5, 7, 0.85); backdrop-filter: blur(12px);
+            z-index: 1000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
+            animation: fadeIn 0.25s ease;
+        }
+        .modal-overlay.activo { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+        .modal-caja {
+            background: linear-gradient(160deg, #131318 0%, #09090b 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; width: 100%; max-width: 520px;
+            padding: 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.9), 0 0 40px rgba(255,255,255,0.02);
+            box-sizing: border-box; max-height: 90vh; overflow-y: auto;
+        }
+
+        .modal-header-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+        .modal-caja h2 { margin: 0; font-size: 1.7rem; font-weight: 800; color: #fff; letter-spacing: -0.8px; }
+        .modal-caja p.subtitulo { color: #888891; font-size: 0.88rem; margin: 6px 0 0 0; }
+        .btn-cerrar-x { background: none; border: none; color: #71717a; font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1; transition: color 0.2s; }
+        .btn-cerrar-x:hover { color: #fff; }
+
+        /* VISTA PREVIA */
+        .preview-portada-box {
+            width: 100%; height: 110px; border-radius: 10px; background-color: #18181b;
+            background-size: cover; background-position: center; border: 1px dashed rgba(255, 255, 255, 0.15);
+            margin-bottom: 22px; display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden; transition: all 0.3s ease;
+        }
+        .preview-portada-box span {
+            background-color: rgba(0, 0, 0, 0.7); padding: 6px 12px; border-radius: 6px; font-size: 0.75rem;
+            color: #a1a1aa; font-weight: 600; letter-spacing: 0.5px; backdrop-filter: blur(4px); border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.78rem; color: #a1a1aa; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; background-color: #121216; border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px; padding: 13px 16px; color: #fff; font-family: 'Inter', sans-serif;
+            font-size: 0.95rem; box-sizing: border-box; outline: none; transition: all 0.3s ease;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: rgba(255, 255, 255, 0.3); background-color: #18181b; box-shadow: 0 0 15px rgba(255, 255, 255, 0.04);
+        }
+        .form-group textarea { resize: vertical; height: 90px; }
+        .ayuda-catbox { font-size: 0.78rem; color: #71717a; margin-top: 8px; display: block; line-height: 1.4; }
+        .ayuda-catbox a { color: #e4e4e7; text-decoration: none; font-weight: 600; border-bottom: 1px solid #52525b; }
+        .ayuda-catbox a:hover { color: #fff; border-color: #fff; }
+
+        .modal-botones { display: flex; gap: 12px; margin-top: 30px; }
+        .btn-modal-cancelar {
+            flex: 1; background-color: transparent; color: #a1a1aa; border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-modal-cancelar:hover { background-color: #18181b; color: #fff; border-color: rgba(255, 255, 255, 0.2); }
+        .btn-modal-guardar {
+            flex: 1.2; background-color: #fff; color: #000; border: none; padding: 14px;
+            border-radius: 10px; font-weight: 700; cursor: pointer; transition: transform 0.1s ease, opacity 0.2s;
+        }
+        .btn-modal-guardar:hover { opacity: 0.95; }
+        .btn-modal-guardar:active { transform: scale(0.97); }
+
+        @media(max-width: 768px) {
+            header { padding: 15px 20px; gap: 15px; }
+            .buscador-nav { display: none; }
+            .modal-caja { padding: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-nav">Krow</div>
+        <div class="buscador-nav">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" placeholder="Buscar comunidades públicas...">
+        </div>
+        <div class="nav-acciones">
+            <button class="btn-crear" id="btn-abrir-modal">+ Crear Comunidad</button>
+            <div class="perfil-menu-container" id="perfil-menu-btn">
+                <div class="avatar-usuario" id="avatar-iniciales">U</div>
+                <div class="dropdown-perfil" id="dropdown-perfil">
+                    <a href="#" class="dropdown-item logout" id="btn-cerrar-sesion">Cerrar Sesión</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section>
+            <h2>Explorar Directorio</h2>
+            <div class="grid-universos" id="grid-publicos">
+                <p class="mensaje-vacio" id="loader-publicos">Cargando la red de universos...</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL CINEMATOGRÁFICO -->
+    <div class="modal-overlay" id="modal-crear">
+        <div class="modal-caja">
+            <div class="modal-header-flex">
+                <div>
+                    <h2>Forjar Universo</h2>
+                    <p class="subtitulo">Establece las reglas y el entorno de tu nueva comunidad.</p>
+                </div>
+                <button class="btn-cerrar-x" id="btn-cerrar-x">&times;</button>
+            </div>
+            
+            <div class="preview-portada-box" id="preview-box">
+                <span id="preview-text">Vista previa de portada</span>
+            </div>
+
+            <div class="form-group">
+                <label>Nombre de la Comunidad</label>
+                <input type="text" id="input-nombre" placeholder="Ej. El Sindicato de las Sombras" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="input-desc" placeholder="¿De qué trata este rol? Breve resumen de la trama..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Visibilidad</label>
+                <select id="input-visibilidad">
+                    <option value="publico">Pública (Directorio general)</option>
+                    <option value="privado">Privada (Solo invitación oculta)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Etiquetas</label>
+                <input type="text" id="input-tags" placeholder="Ej. Fantasía, Romance, +18 (Separa con comas)" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Portada (URL de la imagen)</label>
+                <input type="text" id="input-portada" placeholder="https://..." autocomplete="off">
+                <span class="ayuda-catbox">💡 Sube tu imagen a <a href="https://catbox.moe" target="_blank">Catbox.moe</a> y pega aquí el enlace.</span>
+            </div>
+
+            <div class="modal-botones">
+                <button class="btn-modal-cancelar" id="btn-cerrar-modal">Cancelar</button>
+                <button class="btn-modal-guardar" id="btn-guardar-comunidad">Forjar Comunidad</button>
+            </div>
+        </div>
+    </div>
+
+      <!-- SCRIPT DEL HUB (ACTUALIZADO CON MEMORIA DE SOLICITUDES) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        // ¡Nota: Agregamos "where" aquí arriba para poder buscar tus expedientes!
+        import { getFirestore, collection, doc, getDoc, addDoc, getDocs, serverTimestamp, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3_P-prlT0bmm8bREQ2g4uLaDamTRHnGI",
+            authDomain: "krow-83002.firebaseapp.com",
+            projectId: "krow-83002",
+            storageBucket: "krow-83002.firebasestorage.app",
+            messagingSenderId: "567485047347",
+            appId: "1:567485047347:web:87fbf4a8b44a657061b946"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let usuarioActual = null;
+
+        const perfilMenuBtn = document.getElementById("perfil-menu-btn");
+        const dropdownPerfil = document.getElementById("dropdown-perfil");
+        const btnCerrarSesion = document.getElementById("btn-cerrar-sesion");
+        const avatarIniciales = document.getElementById("avatar-iniciales");
+        
+        const modalCrear = document.getElementById("modal-crear");
+        const btnAbrirModal = document.getElementById("btn-abrir-modal");
+        const btnCerrarModal = document.getElementById("btn-cerrar-modal");
+        const btnCerrarX = document.getElementById("btn-cerrar-x");
+        const btnGuardarComunidad = document.getElementById("btn-guardar-comunidad");
+        const gridPublicos = document.getElementById("grid-publicos");
+        
+        const inputPortada = document.getElementById("input-portada");
+        const previewBox = document.getElementById("preview-box");
+        const previewText = document.getElementById("preview-text");
+
+        perfilMenuBtn.addEventListener("click", (e) => { e.stopPropagation(); dropdownPerfil.classList.toggle("activo"); });
+        window.addEventListener("click", () => { dropdownPerfil.classList.remove("activo"); });
+        
+        btnAbrirModal.addEventListener("click", () => modalCrear.classList.add("activo"));
+        btnCerrarModal.addEventListener("click", () => modalCrear.classList.remove("activo"));
+        btnCerrarX.addEventListener("click", () => modalCrear.classList.remove("activo"));
+
+        inputPortada.addEventListener("input", () => {
+            const url = inputPortada.value.trim();
+            if (url) {
+                previewBox.style.backgroundImage = `url('${url}')`;
+                previewText.style.display = "none";
+            } else {
+                previewBox.style.backgroundImage = "none";
+                previewText.style.display = "block";
+            }
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                usuarioActual = user;
+                localStorage.setItem("krow_sesion_respaldo", user.uid);
+                if (user.email) avatarIniciales.textContent = user.email.charAt(0).toUpperCase();
+                if (user.photoURL) avatarIniciales.innerHTML = `<img src="${user.photoURL}" alt="Perfil">`;
+                cargarComunidades();
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        btnCerrarSesion.addEventListener("click", async () => {
+            await signOut(auth); window.location.href = "index.html";
+        });
+
+        btnGuardarComunidad.addEventListener("click", async () => {
+            const nombre = document.getElementById("input-nombre").value.trim();
+            const desc = document.getElementById("input-desc").value.trim();
+            const visibilidad = document.getElementById("input-visibilidad").value;
+            const tagsInput = document.getElementById("input-tags").value;
+            let portada = inputPortada.value.trim();
+
+            if (!nombre || !desc) {
+                Swal.fire({ title: 'Datos incompletos', text: 'El nombre y la descripción son obligatorios.', icon: 'warning', background: '#09090b', color: '#fff', confirmButtonColor: '#fff' });
+                return;
+            }
+            if(!portada) portada = "https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?auto=format&fit=crop&w=600&q=80";
+            const tags = tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag !== "");
+
+            btnGuardarComunidad.textContent = "Forjando...";
+            btnGuardarComunidad.disabled = true;
+
+            try {
+                const docRef = await addDoc(collection(db, "comunidades"), {
+                    titulo: nombre,
+                    descripcion: desc,
+                    visibilidad: visibilidad,
+                    tags: tags,
+                    portada: portada,
+                    creadorId: usuarioActual.uid,
+                    creadorEmail: usuarioActual.email,
+                    fechaCreacion: serverTimestamp()
+                });
+
+                modalCrear.classList.remove("activo");
+                document.getElementById("input-nombre").value = "";
+                document.getElementById("input-desc").value = "";
+                document.getElementById("input-tags").value = "";
+                inputPortada.value = "";
+                previewBox.style.backgroundImage = "none";
+                previewText.style.display = "block";
+
+                cargarComunidades();
+
+                const linkInvitacion = `${window.location.origin}/comunidad.html?id=${docRef.id}`;
+                Swal.fire({ 
+                    title: '¡Universo forjado!', 
+                    html: `Tu comunidad está lista para recibir roleplayers.<br><br><span style="font-size:0.85rem; color:#a1a1aa;">Comparte este enlace para invitar reclutas:</span><br><input type="text" value="${linkInvitacion}" readonly style="width:100%; padding:12px; background:#121216; color:#fff; border:1px solid #27272a; border-radius:8px; margin-top:10px; font-family:monospace; box-sizing:border-box; outline:none;">`,
+                    icon: 'success', background: '#09090b', color: '#fff', 
+                    confirmButtonColor: '#fff', confirmButtonText: '<span style="color:#000; font-weight:700;">Copiar y Cerrar</span>' 
+                }).then((result) => {
+                    if(result.isConfirmed) {
+                        navigator.clipboard.writeText(linkInvitacion);
+                        Swal.fire({ title: '¡Enlace copiado!', icon: 'success', background: '#09090b', color: '#fff', timer: 1500, showConfirmButton: false });
+                    }
+                });
+
+            } catch (error) {
+                Swal.fire({ title: 'Error', text: 'No se pudo crear la comunidad.', icon: 'error', background: '#09090b', color: '#fff' });
+            } finally {
+                btnGuardarComunidad.textContent = "Forjar Comunidad";
+                btnGuardarComunidad.disabled = false;
+            }
+        });
+
+          async function cargarComunidades() {
+        try {
+            // 1. Cargamos todas las comunidades del directorio
+            const q = query(collection(db, "comunidades"), orderBy("fechaCreacion", "desc"));
+            const querySnapshot = await getDocs(q);
+            
+            const gridPublicos = document.getElementById("grid-publicos");
+            gridPublicos.innerHTML = "";
+
+            if (querySnapshot.empty) {
+                gridPublicos.innerHTML = '<p class="mensaje-vacio">El directorio está vacío. Sé el primero en crear una comunidad.</p>';
+                return;
+            }
+
+            // 2. Recorremos cada comunidad y verificamos el acceso del usuario actual
+            for (const docSnap of querySnapshot.docs) {
+                const data = docSnap.data();
+                const comunidadid = docSnap.id;
+                
+                const soyCreador = data.creadorId === usuarioActual.uid;
+
+                // Verificamos si el usuario ya vive en la lista de miembros oficiales de esta comunidad
+                const miembroRef = doc(db, `comunidades/${comunidadid}/miembros/${usuarioActual.uid}`);
+                const miembroSnap = await getDoc(miembroRef);
+                const yaSoyMiembro = miembroSnap.exists();
+
+                const qSolicitud = query(collection(db, "solicitudes"), where("comunidadId", "==", comunidadid), where("solicitanteId", "==", usuarioActual.uid));
+                const snapSolicitud = await getDocs(qSolicitud);
+
+                let solicitudPendiente = null;
+                snapSolicitud.forEach((sDoc) => {
+                    if (sDoc.data().estado === "pendiente") {
+                        solicitudPendiente = sDoc.id;
+                    }
+                });
+
+                let textoBoton = "Unirse a la comunidad";
+                let claseBoton = "btn-unirse";
+                let linkDestino = `solicitud.html?id=${comunidadid}&nombre=${encodeURIComponent(data.titulo)}`;
+                let opacidad = "1";
+
+                // REGLA DE ACCESO: Si eres creador O ya estás en la lista de miembros aprobados
+                if (soyCreador || yaSoyMiembro) {
+                    textoBoton = "Entrar a la comunidad";
+                    claseBoton = "btn-entrar";
+                    linkDestino = `comunidad.html?id=${comunidadid}`;
+                } else if (solicitudPendiente) {
+                    textoBoton = "Chat de Revisión";
+                    claseBoton = "btn-unirse";
+                    linkDestino = `chat-solicitud.html?solicitudid=${solicitudPendiente}&comunidadId=${comunidadid}`;
+                }
+
+                if (data.visibilidad === "publico" || soyCreador || yaSoyMiembro || solicitudPendiente) {
+                    let htmlTags = "";
+                    if (data.tags && data.tags.length > 0) {
+                        data.tags.forEach(tag => { htmlTags += `<span class="tag">${tag}</span>`; });
+                    }
+
+                    const tarjeta = document.createElement("div");
+                    tarjeta.className = "tarjeta-universo";
+                    tarjeta.innerHTML = `
+                        <div class="tarjeta-portada" style="background-image: url('${data.portada}');"></div>
+                        <div class="tarjeta-contenido">
+                            <div class="tags-container">${htmlTags}</div>
+                            <h3>${data.titulo}</h3>
+                            <p>${data.descripcion}</p>
+                            <a href="${linkDestino}" class="btn-accion-tarjeta ${claseBoton}" style="display:block; opacity:${opacidad};">${textoBoton}</a>
+                        </div>
+                    `;
+                    gridPublicos.appendChild(tarjeta);
+                }
+            }
+        } catch (error) {
+            console.error("Error cargando comunidades:", error);
+            document.getElementById("grid-publicos").innerHTML = `<p class="mensaje-vacio" style="color:#f87171;">Error: ${error.message}</p>`;
+        }
+    }
+
+
+    </script>
+
+</body>
+</html>

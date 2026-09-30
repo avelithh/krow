@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat de Rol - Krow</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: #09090b; color: #e0e0e0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #chat-fondo { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #09090b; background-size: cover; background-position: center; opacity: 0.25; z-index: -1; transition: background-image 0.3s ease; }
+        header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #1f1f23; z-index: 10; }
+        .header-izq { display: flex; align-items: center; gap: 15px; }
+        .btn-volver { color: #a1a1aa; text-decoration: none; font-size: 1.2rem; }
+        .header-info h2 { margin: 0; font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 8px;}
+        .badge-cerrado { font-size: 0.7rem; background: #7f1d1d; padding: 2px 6px; border-radius: 4px; display: none;}
+        .opciones-container { position: relative; }
+        .btn-opciones { background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: 0 10px;}
+        .dropdown-opciones { display: none; position: absolute; right: 0; top: 40px; background-color: #121216; border: 1px solid #27272a; border-radius: 8px; width: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.9); overflow: hidden; }
+        .dropdown-opciones.activo { display: block; }
+        .opcion-item { padding: 12px 16px; display: block; color: #d4d4d8; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #1f1f23;}
+        .opcion-item:hover { background-color: #18181b; color: #fff; }
+        .solo-admin { display: none; }
+        #chat-contenedor { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
+        .mensaje-wrapper { display: flex; gap: 12px; max-width: 85%; transition: background-color 0.5s; border-radius: 12px; padding: 5px; margin: -5px;}
+        .mensaje-enviado { align-self: flex-end; flex-direction: row-reverse; }
+        .mensaje-recibido { align-self: flex-start; }
+        .msg-avatar { width: 35px; height: 35px; border-radius: 50%; background-size: cover; background-color: #27272a; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
+        .msg-contenido { display: flex; flex-direction: column; cursor: pointer; transition: opacity 0.2s; }
+        .msg-contenido:active { opacity: 0.7; }
+        .mensaje-enviado .msg-contenido { align-items: flex-end; }
+        .mensaje-recibido .msg-contenido { align-items: flex-start; }
+        .msg-nombre { font-size: 0.75rem; font-weight: 600; margin-bottom: 4px; color: #a1a1aa; }
+        .msg-burbuja { padding: 10px 14px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; position: relative; }
+        .mensaje-recibido .msg-burbuja { background-color: rgba(39, 39, 42, 0.9); border: 1px solid rgba(255,255,255,0.05); color: #e0e0e0; border-top-left-radius: 2px; }
+        .mensaje-enviado .msg-burbuja { background-color: rgba(88, 28, 135, 0.8); border: 1px solid rgba(139, 92, 246, 0.3); color: #fff; border-top-right-radius: 2px; }
+        .mencion { color: #d8b4fe; font-weight: 700; background: rgba(216, 180, 254, 0.2); padding: 0 4px; border-radius: 4px; }
+        .msg-reply-box { background-color: rgba(0,0,0,0.3); border-left: 3px solid #a855f7; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; font-size: 0.8rem; color: #d4d4d8; }
+        .msg-reply-autor { font-weight: 700; color: #c084fc; margin-bottom: 2px; display: block; }
+        .msg-imagen-enviada { max-width: 100%; max-height: 250px; border-radius: 8px; margin-top: 5px; cursor: pointer; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+        .contenedor-inferior { background-color: rgba(9, 9, 11, 0.95); border-top: 1px solid #1f1f23; z-index: 10; display: flex; flex-direction: column;}
+        .caja-respondiendo { display: none; padding: 10px 20px; background-color: #121216; border-bottom: 1px solid #27272a; justify-content: space-between; align-items: center; }
+        .caja-respondiendo.activo { display: flex; }
+        .reply-texto { font-size: 0.8rem; color: #a1a1aa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%; }
+        .btn-cancelar-reply { background: none; border: none; color: #f87171; cursor: pointer; font-size: 1rem; }
+        .zona-input { display: flex; padding: 12px 15px; gap: 10px; align-items: center; position: relative;}
+        .btn-cambio-pj { width: 40px; height: 40px; border-radius: 50%; background-color: #27272a; background-size: cover; border: 2px solid #52525b; cursor: pointer; flex-shrink: 0; }
+        .btn-galeria { background: none; border: none; color: #a1a1aa; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; }
+        .btn-galeria:hover { color: #fff; }
+        .btn-galeria svg { width: 24px; height: 24px; fill: currentColor; }
+        .zona-input input[type="text"] { flex: 1; background-color: #121216; border: 1px solid #27272a; border-radius: 20px; padding: 10px 15px; color: #fff; font-family: 'Inter', sans-serif; outline: none; }
+        .zona-input input[type="text"]:focus { border-color: #52525b; }
+        .btn-enviar-msg { background-color: #fff; color: #000; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-enviar-msg svg { width: 18px; fill: #000; margin-left: 2px; }
+        .banner-cerrado { display: none; width: 100%; padding: 15px; background-color: #7f1d1d; color: #fff; text-align: center; font-size: 0.9rem; font-weight: 600; }
+        #menu-menciones { display: none; position: absolute; bottom: 70px; left: 60px; background-color: #18181b; border: 1px solid #27272a; border-radius: 8px; max-height: 150px; overflow-y: auto; width: 200px; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 200; }
+        .mencion-item { padding: 10px; color: #d4d4d8; font-size: 0.85rem; cursor: pointer; border-bottom: 1px solid #27272a; }
+        .mencion-item:hover { background-color: #27272a; color: #fff; }
+        .modal-sheet { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #121216; border-top: 1px solid #27272a; border-radius: 20px 20px 0 0; padding: 20px; box-sizing: border-box; z-index: 2000; transform: translateY(100%); transition: transform 0.3s ease-out; }
+        .modal-sheet.activo { display: block; transform: translateY(0); }
+        .sheet-header { display: flex; justify-content: space-between; margin-bottom: 15px; color: #fff; font-weight: 700;}
+        .pj-selector { display: flex; align-items: center; gap: 15px; padding: 10px; border-radius: 10px; cursor: pointer; margin-bottom: 5px; }
+        .pj-selector:hover { background-color: #18181b; }
+        .pj-selector.seleccionado { border: 1px solid #581c87; background-color: rgba(88, 28, 135, 0.2); }
+        .overlay-bg { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 1500; }
+        .overlay-bg.activo { display: block; }
+        
+        /* BOTÓN FLOTANTE MENCIONES */
+        #btn-flotante-mencion { display: none; position: fixed; bottom: 90px; right: 20px; background-color: #18181b; color: #a855f7; border: 2px solid #a855f7; border-radius: 50%; width: 45px; height: 45px; font-weight: 800; font-size: 1.3rem; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.8); z-index: 100; cursor: pointer; transition: transform 0.2s; }
+        #btn-flotante-mencion:active { transform: scale(0.9); }
+        #contador-menciones { position: absolute; top: -5px; right: -5px; background: #eab308; color: #000; font-size: 0.65rem; border-radius: 50%; padding: 2px 6px; border: 2px solid #09090b; }
+    </style>
+</head>
+<body>
+    <div id="chat-fondo"></div>
+    <header>
+        <div class="header-izq">
+            <a href="#" class="btn-volver" id="btn-volver">←</a>
+            <div class="header-info"><h2 id="ui-nombre-chat">Cargando... <span class="badge-cerrado" id="badge-cerrado">CERRADO</span></h2></div>
+        </div>
+        <div class="opciones-container">
+            <button class="btn-opciones" id="btn-opciones">⋮</button>
+            <div class="dropdown-opciones" id="menu-opciones">
+                <a href="#" class="opcion-item" id="opt-fondo">🖼️ Fondo personal</a>
+                <a href="#" class="opcion-item solo-admin" id="opt-nombre">✏️ Cambiar nombre sala</a>
+                <a href="#" class="opcion-item solo-admin" id="opt-cerrar">🔒 Cerrar / Abrir chat</a>
+            </div>
+        </div>
+    </header>
+    <div id="chat-contenedor"></div>
+    <div class="banner-cerrado" id="banner-cerrado">El chat ha sido cerrado.</div>
+    <div id="btn-flotante-mencion">@<span id="contador-menciones">1</span></div>
+    <div class="contenedor-inferior" id="zona-input-completa">
+        <div class="caja-respondiendo" id="caja-respondiendo"><div class="reply-texto" id="txt-respondiendo">Respondiendo a...</div><button class="btn-cancelar-reply" id="btn-cancelar-reply">✖</button></div>
+        <div class="zona-input">
+            <div class="btn-cambio-pj" id="btn-abrir-sheet" style="background-image: url('https://via.placeholder.com/40');"></div>
+            <button class="btn-galeria" id="btn-galeria"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></button>
+            <input type="file" id="input-archivo" accept="image/*" style="display: none;">
+            <div id="menu-menciones"></div>
+            <input type="text" id="input-mensaje" placeholder="Escribe un mensaje..." autocomplete="off">
+            <button class="btn-enviar-msg" id="btn-enviar"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+        </div>
+    </div>
+    <div class="overlay-bg" id="sheet-overlay"></div>
+    <div class="modal-sheet" id="modal-sheet"><div class="sheet-header"><span>¿Quién va a hablar?</span><span style="color: #a1a1aa; cursor:pointer;" id="btn-cerrar-sheet">✕</span></div><div id="lista-pjs-sheet"></div></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyC3_P-prlT0bmm8bREQ2g4uLaDamTRHnGI", authDomain: "krow-83002.firebaseapp.com", projectId: "krow-83002", storageBucket: "krow-83002.firebasestorage.app", messagingSenderId: "567485047347", appId: "1:567485047347:web:87fbf4a8b44a657061b946" };
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+        const urlParams = new URLSearchParams(window.location.search);
+        const comunidadId = urlParams.get('id'); const salaId = urlParams.get('salaId'); 
+        const chatKey = salaId ? salaId : "general"; // Clave única de memoria
+        
+        let usuarioActual = null; let esAdmin = false; let misPersonajes = []; let personajeActivo = null; let mensajeCita = null; let participantesRecientes = [];
+        let misMencionesNoLeidas = []; let indiceMencionActual = 0;
+        
+        let pathDocInfo = salaId ? doc(db, "comunidades", comunidadId, "salasExtras", salaId) : doc(db, "comunidades", comunidadId);
+        let pathColeccion = salaId ? collection(db, "comunidades", comunidadId, "salasExtras", salaId, "mensajes") : collection(db, "comunidades", comunidadId, "chatGrupal");
+
+        document.getElementById("btn-volver").href = `chats.html?id=${comunidadId}`;
+        const chatContenedor = document.getElementById("chat-contenedor"); const inputMensaje = document.getElementById("input-mensaje"); const menuMenciones = document.getElementById("menu-menciones");
+        const menuOpciones = document.getElementById("menu-opciones"); document.getElementById("btn-opciones").addEventListener("click", (e) => { e.stopPropagation(); menuOpciones.classList.toggle("activo"); }); window.addEventListener("click", () => menuOpciones.classList.remove("activo"));
+        const sheet = document.getElementById("modal-sheet"); const overlay = document.getElementById("sheet-overlay"); const toggleSheet = () => { sheet.classList.toggle("activo"); overlay.classList.toggle("activo"); }; document.getElementById("btn-abrir-sheet").addEventListener("click", toggleSheet); document.getElementById("btn-cerrar-sheet").addEventListener("click", toggleSheet); overlay.addEventListener("click", toggleSheet);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user && comunidadId) {
+                usuarioActual = user;
+                await cargarMisPersonajes();
+                inicializarChat(); 
+            } else { window.location.href = "index.html"; }
+        });
+
+        async function cargarMisPersonajes() {
+            const snap = await getDocs(query(collection(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes`)));
+            misPersonajes = []; snap.forEach(doc => misPersonajes.push({ id: doc.id, ...doc.data() }));
+            if(misPersonajes.length > 0) {
+                const guardado = localStorage.getItem(`pj_activo_${comunidadId}`);
+                personajeActivo = misPersonajes.find(p => p.id === guardado) || misPersonajes[0];
+                document.getElementById("btn-abrir-sheet").style.backgroundImage = `url('${personajeActivo.avatarUrl}')`;
+                const lista = document.getElementById("lista-pjs-sheet");
+                misPersonajes.forEach(pj => {
+                    const div = document.createElement("div"); div.className = `pj-selector ${pj.id === personajeActivo.id ? 'seleccionado' : ''}`;
+                    div.innerHTML = `<div class="msg-avatar" style="background-image:url('${pj.avatarUrl}')"></div><div style="color:#fff;">${pj.nombre}</div>`;
+                    div.onclick = () => { personajeActivo = pj; localStorage.setItem(`pj_activo_${comunidadId}`, pj.id); document.getElementById("btn-abrir-sheet").style.backgroundImage = `url('${pj.avatarUrl}')`; toggleSheet(); inicializarChat(); };
+                    lista.appendChild(div);
+                });
+            }
+        }
+
+        function inicializarChat() {
+            // Guardar en la memoria local que entraste al chat AHORA
+            localStorage.setItem(`ultimoAcceso_${comunidadId}_${chatKey}`, Date.now());
+
+            onSnapshot(pathDocInfo, (docSnap) => {
+                if(!docSnap.exists()) return;
+                const data = docSnap.data();
+                getDoc(doc(db, "comunidades", comunidadId)).then(comuSnap => {
+                    if(comuSnap.exists()) {
+                        const comuData = comuSnap.data(); esAdmin = (usuarioActual.uid === comuData.creadorId) || (comuData.admins && comuData.admins.includes(usuarioActual.uid));
+                        if(esAdmin) document.querySelectorAll(".solo-admin").forEach(el => el.style.display = "block");
+                        document.getElementById("ui-nombre-chat").innerHTML = `${data.nombre || data.nombreChatGrupal || 'Sala Principal'} <span class="badge-cerrado" id="badge-cerrado" style="display:${data.chatCerrado ? 'inline-block':'none'}">CERRADO</span>`;
+                        if(data.chatCerrado && !esAdmin) { document.getElementById("zona-input-completa").style.display = "none"; document.getElementById("banner-cerrado").style.display = "block"; } else { document.getElementById("zona-input-completa").style.display = "flex"; document.getElementById("banner-cerrado").style.display = "none"; }
+                    }
+                });
+            });
+
+            onSnapshot(query(pathColeccion, orderBy("timestamp", "asc")), (snapshot) => {
+                chatContenedor.innerHTML = ""; 
+                const nombresUnicos = new Set();
+                misMencionesNoLeidas = []; 
+
+                // Leer la memoria de tu última mención atendida
+                const ultimaMencionVista = parseInt(localStorage.getItem(`mencionVista_${comunidadId}_${chatKey}`)) || 0;
+
+                snapshot.forEach((docSnap) => {
+                    const msg = docSnap.data(); msg.id = docSnap.id;
+                    const esMio = msg.remitenteId === usuarioActual.uid;
+                    if(msg.personajeNombre) nombresUnicos.add(msg.personajeNombre); 
+
+                    // Escáner Inteligente: Solo avisa si es una mención NUEVA
+                    let tiempoMsg = msg.timestamp ? msg.timestamp.toMillis() : Date.now();
+                    let esNueva = tiempoMsg > ultimaMencionVista;
+
+                    if (personajeActivo && !esMio && esNueva) {
+                        let mencionadoText = msg.texto && msg.texto.includes('@' + personajeActivo.nombre);
+                        let mencionadoReply = msg.cita && msg.cita.autor === personajeActivo.nombre;
+                        if (mencionadoText || mencionadoReply) misMencionesNoLeidas.push(`msg-${msg.id}`);
+                    }
+
+                    let texto = msg.texto ? msg.texto.replace(/@(\w+)/g, '<span class="mencion">@$1</span>') : "";
+                    let htmlCita = msg.cita ? `<div class="msg-reply-box"><span class="msg-reply-autor">${msg.cita.autor}</span>${msg.cita.texto}</div>` : "";
+                    let htmlImg = msg.imagenUrl ? `<img src="${msg.imagenUrl}" class="msg-imagen-enviada">` : "";
+
+                    const div = document.createElement("div"); div.id = `msg-${msg.id}`; div.className = `mensaje-wrapper ${esMio ? 'mensaje-enviado' : 'mensaje-recibido'}`;
+                    div.innerHTML = `<div class="msg-avatar" style="background-image: url('${msg.personajeAvatar}');"></div><div class="msg-contenido"><div class="msg-nombre">${msg.personajeNombre || 'Desconocido'}</div><div class="msg-burbuja">${htmlCita}${texto}${htmlImg}</div></div>`;
+                    
+                    div.querySelector('.msg-contenido').onclick = (e) => { if (e.target.tagName === 'IMG') { Swal.fire({ imageUrl: msg.imagenUrl, imageAlt: 'Imagen ampliada', background: '#09090b', showConfirmButton: false, width: '90%', padding: '10px' }); return; } abrirOpcionesMensaje(msg, esMio); };
+                    chatContenedor.appendChild(div);
+                });
+                
+                participantesRecientes = Array.from(nombresUnicos);
+                
+                const btnMencion = document.getElementById("btn-flotante-mencion");
+                if (misMencionesNoLeidas.length > 0) {
+                    btnMencion.style.display = "flex"; document.getElementById("contador-menciones").textContent = misMencionesNoLeidas.length;
+                } else {
+                    btnMencion.style.display = "none"; chatContenedor.scrollTop = chatContenedor.scrollHeight;
+                }
+            });
+        }
+
+        // --- BOTÓN FLOTANTE: APAGA LA ALERTA AL LLEGAR AL FINAL ---
+        document.getElementById("btn-flotante-mencion").addEventListener("click", () => {
+            if(misMencionesNoLeidas.length === 0) return;
+            const targetId = misMencionesNoLeidas[indiceMencionActual];
+            const elementoDestino = document.getElementById(targetId);
+            if (elementoDestino) {
+                elementoDestino.scrollIntoView({ behavior: "smooth", block: "center" });
+                elementoDestino.style.backgroundColor = "rgba(168, 85, 247, 0.4)";
+                setTimeout(() => { elementoDestino.style.backgroundColor = "transparent"; }, 1500);
+            }
+            indiceMencionActual++;
+            
+            // Si ya vimos la última mención, apagar el botón y guardar en memoria
+            if(indiceMencionActual >= misMencionesNoLeidas.length) {
+                indiceMencionActual = 0;
+                misMencionesNoLeidas = []; 
+                document.getElementById("btn-flotante-mencion").style.display = "none";
+                localStorage.setItem(`mencionVista_${comunidadId}_${chatKey}`, Date.now()); // Memoria actualizada
+            }
+        });
+
+        async function abrirOpcionesMensaje(msg, esMio) {
+            Swal.fire({ title: 'Mensaje de ' + (msg.personajeNombre || 'Desconocido'), showDenyButton: esMio || esAdmin, showCancelButton: true, confirmButtonText: 'Responder', denyButtonText: 'Eliminar', cancelButtonText: 'Cancelar', background: '#121216', color: '#fff', confirmButtonColor: '#a855f7', denyButtonColor: '#7f1d1d' }).then(async (result) => {
+                if (result.isConfirmed) { mensajeCita = { id: msg.id, autor: msg.personajeNombre, texto: msg.texto || '📸 Imagen' }; document.getElementById("txt-respondiendo").innerHTML = `Respondiendo a <b>${msg.personajeNombre}</b>`; document.getElementById("caja-respondiendo").classList.add("activo"); inputMensaje.focus(); } else if (result.isDenied) { await deleteDoc(doc(db, pathColeccion.path, msg.id)); }
+            });
+        }
+        document.getElementById("btn-cancelar-reply").onclick = () => { mensajeCita = null; document.getElementById("caja-respondiendo").classList.remove("activo"); };
+        inputMensaje.addEventListener("input", (e) => { const val = e.target.value; if(val.includes("@")) { menuMenciones.innerHTML = ""; participantesRecientes.forEach(p => { const div = document.createElement("div"); div.className = "mencion-item"; div.textContent = "@" + p; div.onclick = () => { inputMensaje.value = inputMensaje.value.replace(/@\w*$/, `@${p} `); menuMenciones.style.display = "none"; inputMensaje.focus(); }; menuMenciones.appendChild(div); }); menuMenciones.style.display = "block"; } else { menuMenciones.style.display = "none"; } });
+        const inputArchivo = document.getElementById("input-archivo"); document.getElementById("btn-galeria").onclick = () => { if(!personajeActivo) return; inputArchivo.click(); };
+        inputArchivo.addEventListener("change", async (e) => { const archivo = e.target.files[0]; if(!archivo) return; if (!archivo.type.startsWith('image/')) { Swal.fire({title: 'Error', text: 'Selecciona una imagen válida.', background: '#121216', color: '#fff'}); return; } Swal.fire({title: 'Procesando...', allowOutsideClick: false, background: '#121216', color: '#fff', didOpen: () => Swal.showLoading()}); try { const reader = new FileReader(); reader.readAsDataURL(archivo); reader.onload = async (event) => { const img = new Image(); img.src = event.target.result; img.onload = async () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; const MAX_WIDTH = 800; const MAX_HEIGHT = 800; if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } } canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); const base64String = canvas.toDataURL('image/jpeg', 0.6); await addDoc(pathColeccion, { texto: "", imagenUrl: base64String, remitenteId: usuarioActual.uid, personajeId: personajeActivo.id, personajeNombre: personajeActivo.nombre, personajeAvatar: personajeActivo.avatarUrl, timestamp: serverTimestamp() }); await updateDoc(pathDocInfo, { ultimaActividad: serverTimestamp() }); Swal.close(); }; }; } catch(error) { Swal.fire({title: 'Error', text: 'No se pudo adjuntar.', background: '#121216', color: '#fff'}); } inputArchivo.value = ""; });
+        document.getElementById("btn-enviar").onclick = enviarMensaje; inputMensaje.addEventListener("keypress", (e) => { if (e.key === "Enter") enviarMensaje(); });
+        
+        async function enviarMensaje() {
+            const texto = inputMensaje.value.trim(); if (!texto || !personajeActivo) return;
+            const msg = { texto: texto, remitenteId: usuarioActual.uid, personajeId: personajeActivo.id, personajeNombre: personajeActivo.nombre, personajeAvatar: personajeActivo.avatarUrl, timestamp: serverTimestamp() };
+            if(mensajeCita) msg.cita = mensajeCita; inputMensaje.value = ""; menuMenciones.style.display = "none"; document.getElementById("btn-cancelar-reply").click();
+            await addDoc(pathColeccion, msg);
+            await updateDoc(pathDocInfo, { ultimaActividad: serverTimestamp() }); // AVISA AL SISTEMA GLOBAL QUE HAY MENSAJE NUEVO
+        }
+    </script>
+</body>
+</html>

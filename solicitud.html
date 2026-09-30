@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud de Ingreso - Krow</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 0%, #1a1a24 0%, #09090b 70%);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .contenedor-ficha {
+            background: linear-gradient(145deg, #121216 0%, #0a0a0c 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,1);
+            box-sizing: border-box;
+        }
+
+        .cabecera-ficha {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .cabecera-ficha h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.5px;
+        }
+
+        .cabecera-ficha p {
+            color: #a1a1aa;
+            font-size: 0.9rem;
+            margin: 8px 0 0 0;
+        }
+
+        .comunidad-destino {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #e4e4e7;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+
+        .form-group { margin-bottom: 22px; }
+        
+        .form-group label {
+            display: block; font-size: 0.78rem; color: #a1a1aa; margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+        }
+        
+        .form-group input {
+            width: 100%; background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px; padding: 14px 16px; color: #fff; font-family: 'Inter', sans-serif;
+            font-size: 0.95rem; box-sizing: border-box; outline: none; transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            border-color: rgba(255, 255, 255, 0.3); background-color: rgba(24, 24, 27, 0.5);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.02);
+        }
+
+        .row-doble { display: flex; gap: 15px; }
+        .row-doble .form-group { flex: 1; }
+
+        .botones-accion { display: flex; gap: 15px; margin-top: 35px; }
+
+        .btn-cancelar {
+            flex: 1; background-color: transparent; color: #a1a1aa; border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            text-decoration: none; text-align: center; box-sizing: border-box;
+        }
+        .btn-cancelar:hover { background-color: #18181b; color: #fff; border-color: rgba(255, 255, 255, 0.2); }
+        
+        .btn-enviar {
+            flex: 1.5; background-color: #fff; color: #000; border: none; padding: 15px;
+            border-radius: 8px; font-weight: 700; cursor: pointer; transition: transform 0.1s, opacity 0.2s;
+        }
+        .btn-enviar:hover { opacity: 0.95; }
+        .btn-enviar:active { transform: scale(0.97); }
+
+        @media(max-width: 600px) {
+            .row-doble { flex-direction: column; gap: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor-ficha">
+        <div class="cabecera-ficha">
+            <h1>Control de Acceso</h1>
+            <p>Envía tus datos para abrir un chat de revisión con los administradores.</p>
+            <div class="comunidad-destino" id="nombre-comunidad-ui">Destino: Cargando...</div>
+        </div>
+
+        <div class="form-group">
+            <label>Personaje Solicitado / Avatar</label>
+            <input type="text" id="input-personaje" placeholder="Ej. Caín, OC Gótico, Estudiante de intercambio..." autocomplete="off">
+        </div>
+
+        <div class="row-doble">
+            <div class="form-group">
+                <label>Tu Nombre / Alias (Off-rol)</label>
+                <input type="text" id="input-alias" placeholder="¿Cómo te decimos?" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Edad y País (Opcional)</label>
+                <input type="text" id="input-datos" placeholder="Ej. 20, México" autocomplete="off">
+            </div>
+        </div>
+
+        <div class="botones-accion">
+            <a href="hub.html" class="btn-cancelar">Abortar</a>
+            <button class="btn-enviar" id="btn-enviar-ficha">Iniciar Chat con Admins</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3_P-prlT0bmm8bREQ2g4uLaDamTRHnGI",
+            authDomain: "krow-83002.firebaseapp.com",
+            projectId: "krow-83002",
+            storageBucket: "krow-83002.firebasestorage.app",
+            messagingSenderId: "567485047347",
+            appId: "1:567485047347:web:87fbf4a8b44a657061b946"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let usuarioActual = null;
+
+        // OBTENER PARÁMETROS DE LA URL (?id=...&nombre=...)
+        const urlParams = new URLSearchParams(window.location.search);
+        const comunidadId = urlParams.get('id');
+        const comunidadNombre = urlParams.get('nombre') || 'Universo Desconocido';
+
+        const UI_NombreComunidad = document.getElementById("nombre-comunidad-ui");
+        const btnEnviarFicha = document.getElementById("btn-enviar-ficha");
+
+        // Mostrar el nombre real de la comunidad
+        UI_NombreComunidad.textContent = `Destino: ${comunidadNombre}`;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                usuarioActual = user;
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        btnEnviarFicha.addEventListener("click", async () => {
+            const personaje = document.getElementById("input-personaje").value.trim();
+            const alias = document.getElementById("input-alias").value.trim();
+            const datos = document.getElementById("input-datos").value.trim();
+
+            if (!personaje || !alias) {
+                Swal.fire({ title: 'Atención', text: 'El nombre del personaje y tu alias son necesarios.', icon: 'warning', background: '#09090b', color: '#fff', confirmButtonColor: '#fff' });
+                return;
+            }
+
+            btnEnviarFicha.textContent = "Abriendo canal...";
+            btnEnviarFicha.disabled = true;
+
+            try {
+                // Guardar la solicitud en Firestore
+                const docRef = await addDoc(collection(db, "solicitudes"), {
+                    comunidadId: comunidadId,
+                    comunidadNombre: comunidadNombre,
+                    solicitanteId: usuarioActual.uid,
+                    solicitanteEmail: usuarioActual.email,
+                    personaje: personaje,
+                    alias: alias,
+                    datosExtra: datos,
+                    usuarioId: auth.currentUser.uid,
+                    estado: "pendiente", // pendiente, aprobada, rechazada
+                    fechaSolicitud: serverTimestamp()
+                });
+
+                Swal.fire({
+                    title: '¡Expediente enviado!',
+                    text: 'Redirigiendo al chat privado con los administradores...',
+                    icon: 'success',
+                    background: '#09090b',
+                    color: '#fff',
+                    timer: 1800,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Redirigir a la sala de chat de evaluación
+                    window.location.href = `chat-solicitud.html?solicitudId=${docRef.id}&comunidadId=${comunidadId}`;
+                });
+
+            } catch (error) {
+                Swal.fire({ title: 'Error', text: 'No se pudo enviar la solicitud: ' + error.message, icon: 'error', background: '#09090b', color: '#fff' });
+                btnEnviarFicha.textContent = "Iniciar Chat con Admins";
+                btnEnviarFicha.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

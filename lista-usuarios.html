@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - Krow</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: #09090b; color: #fff; padding-bottom: 20px; }
+        a { text-decoration: none; color: inherit; }
+
+        .header { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid #27272a; background: #121216; position: sticky; top: 0; z-index: 10; }
+        .btn-volver { background: transparent; border: none; color: #a1a1aa; font-size: 1.5rem; cursor: pointer; margin-right: 15px; padding: 0; }
+        .header h1 { margin: 0; font-size: 1.3rem; font-weight: 700; }
+
+        .buscador-container { padding: 20px; }
+        .buscador-input { width: 100%; box-sizing: border-box; background: #18181b; border: 1px solid #27272a; color: #fff; padding: 12px 15px; border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+        .buscador-input:focus { border-color: #a855f7; }
+
+        .lista-container { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+        
+        .usuario-item { display: flex; align-items: center; justify-content: space-between; background: #18181b; padding: 15px; border-radius: 12px; border: 1px solid #27272a; }
+        .usuario-info { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+        
+        .usuario-avatar { width: 45px; height: 45px; border-radius: 50%; background-color: #27272a; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff; font-size: 1.2rem; flex-shrink: 0; }
+        .usuario-texto { display: flex; flex-direction: column; gap: 3px; }
+        .usuario-alias { font-weight: 700; font-size: 1.05rem; }
+        
+        .badge-rol { font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; width: max-content; }
+        .badge-creador { background: rgba(190, 18, 60, 0.2); color: #f43f5e; border: 1px solid rgba(190, 18, 60, 0.5); }
+        .badge-admin { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.5); }
+        .badge-miembro { background: #27272a; color: #a1a1aa; border: 1px solid #3f3f46; }
+
+        .btn-opciones { background: none; border: none; color: #a1a1aa; font-size: 1.2rem; cursor: pointer; padding: 5px 10px; }
+        
+        /* Menú de opciones de cada usuario */
+        .menu-usuario { display: none; position: absolute; right: 30px; background: #121216; border: 1px solid #27272a; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 100; min-width: 160px; }
+        .menu-item { display: block; padding: 12px 15px; font-size: 0.85rem; border-bottom: 1px solid #27272a; cursor: pointer; color: #fff; background: transparent; border: none; width: 100%; text-align: left; }
+        .menu-item:hover { background: #27272a; }
+        .menu-item.peligro { color: #f43f5e; }
+        .menu-item:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="btn-volver" onclick="window.location.href = `comunidad.html?id=${comunidadId}`">←</button>
+        <h1>Gestión de Usuarios</h1>
+    </div>
+
+    <div class="buscador-container">
+        <input type="text" id="buscador" class="buscador-input" placeholder="Buscar por alias...">
+    </div>
+
+    <div class="lista-container" id="contenedor-usuarios">
+        <div style="text-align:center; color:#a1a1aa; padding: 20px;">Cargando base de datos...</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, onSnapshot, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyC3_P-prlT0bmm8bREQ2g4uLaDamTRHnGI", authDomain: "krow-83002.firebaseapp.com", projectId: "krow-83002", storageBucket: "krow-83002.firebasestorage.app", messagingSenderId: "567485047347", appId: "1:567485047347:web:87fbf4a8b44a657061b946" };
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        window.comunidadId = urlParams.get('id');
+        let usuarioActual = null;
+        let datosComunidad = null;
+        let listaMiembros = [];
+
+        // Cerrar menús al hacer click fuera
+        window.addEventListener('click', (e) => {
+            if (!e.target.matches('.btn-opciones')) {
+                document.querySelectorAll('.menu-usuario').forEach(m => m.style.display = 'none');
+            }
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user || !comunidadId) { window.location.href = "index.html"; return; }
+            usuarioActual = user;
+
+            try {
+                const docSnap = await getDoc(doc(db, "comunidades", comunidadId));
+                if (docSnap.exists()) {
+                    datosComunidad = docSnap.data();
+                    const esAdmin = (user.uid === datosComunidad.creadorId) || (datosComunidad.admins && datosComunidad.admins.includes(user.uid));
+                    
+                    if(!esAdmin) {
+                        Swal.fire('Acceso Denegado', 'Solo los administradores pueden ver esta zona.', 'error').then(() => window.location.href = `comunidad.html?id=${comunidadId}`);
+                        return;
+                    }
+
+                    iniciarEscannerUsuarios();
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
+        function iniciarEscannerUsuarios() {
+            onSnapshot(collection(db, `comunidades/${comunidadId}/miembros`), (snapshot) => {
+                listaMiembros = [];
+                snapshot.forEach(docSnap => {
+                    listaMiembros.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                renderizarLista();
+            });
+        }
+
+        function renderizarLista() {
+            const termino = document.getElementById('buscador').value.toLowerCase();
+            const contenedor = document.getElementById('contenedor-usuarios');
+            contenedor.innerHTML = '';
+
+            // Filtrar y Ordenar Alfabéticamente por Alias
+            let filtrados = listaMiembros.filter(m => {
+                const alias = (m.alias || 'Usuario Desconocido').toLowerCase();
+                return alias.includes(termino);
+            });
+
+            filtrados.sort((a, b) => (a.alias || 'Z').localeCompare(b.alias || 'Z'));
+
+            if(filtrados.length === 0) {
+                contenedor.innerHTML = `<div style="text-align:center; color:#a1a1aa; padding: 20px;">No se encontraron usuarios.</div>`;
+                return;
+            }
+
+            filtrados.forEach(miembro => {
+                const alias = miembro.alias || 'Sin Alias';
+                const inicial = alias.charAt(0).toUpperCase();
+                
+                const esCreador = miembro.id === datosComunidad.creadorId;
+                const esAdmin = datosComunidad.admins && datosComunidad.admins.includes(miembro.id);
+                
+                let badgeHTML = `<div class="badge-rol badge-miembro">Miembro</div>`;
+                if(esCreador) badgeHTML = `<div class="badge-rol badge-creador">Creador</div>`;
+                else if(esAdmin) badgeHTML = `<div class="badge-rol badge-admin">Admin</div>`;
+
+                // Construcción de Opciones del Menú (No puedes borrar ni modificar al Creador)
+                let menuHTML = '';
+                if(!esCreador && miembro.id !== usuarioActual.uid) {
+                    if(!esAdmin) {
+                        menuHTML += `<button class="menu-item" onclick="hacerAdmin('${miembro.id}', '${alias}')">⭐ Hacer Administrador</button>`;
+                    } else {
+                        menuHTML += `<button class="menu-item" onclick="quitarAdmin('${miembro.id}', '${alias}')">⏬ Quitar Administrador</button>`;
+                    }
+                    menuHTML += `<button class="menu-item peligro" onclick="expulsarUsuario('${miembro.id}', '${alias}')">⚠️ Expulsar de la Comunidad</button>`;
+                }
+
+                const btnOpcionesHTML = menuHTML !== '' ? `
+                    <div style="position: relative;">
+                        <button class="btn-opciones" onclick="toggleMenu('${miembro.id}', event)">⋮</button>
+                        <div class="menu-usuario" id="menu-${miembro.id}">${menuHTML}</div>
+                    </div>
+                ` : '';
+
+                contenedor.innerHTML += `
+                    <div class="usuario-item">
+                        <div class="usuario-info">
+                            <div class="usuario-avatar">${inicial}</div>
+                            <div class="usuario-texto">
+                                <div class="usuario-alias">${alias}</div>
+                                ${badgeHTML}
+                            </div>
+                        </div>
+                        ${btnOpcionesHTML}
+                    </div>
+                `;
+            });
+        }
+
+        // Búsqueda en tiempo real
+        document.getElementById('buscador').addEventListener('input', renderizarLista);
+
+        window.toggleMenu = function(id, event) {
+            event.stopPropagation(); // Evita que se cierre instantáneamente
+            document.querySelectorAll('.menu-usuario').forEach(m => {
+                if(m.id !== `menu-${id}`) m.style.display = 'none';
+            });
+            const menu = document.getElementById(`menu-${id}`);
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        window.hacerAdmin = function(uid, alias) {
+            Swal.fire({
+                title: '¿Nombrar Admin?', text: `Darás privilegios de moderación a ${alias}.`, icon: 'question',
+                background: '#09090b', color: '#fff', showCancelButton: true, confirmButtonColor: '#a855f7', cancelButtonColor: '#27272a', confirmButtonText: 'Sí, ascender'
+            }).then(async (result) => {
+                if(result.isConfirmed) {
+                    await updateDoc(doc(db, "comunidades", comunidadId), { admins: arrayUnion(uid) });
+                    actualizarMemoriaComunidad();
+                }
+            });
+        }
+
+        window.quitarAdmin = function(uid, alias) {
+            Swal.fire({
+                title: '¿Revocar Admin?', text: `Quitarás privilegios de moderación a ${alias}.`, icon: 'warning',
+                background: '#09090b', color: '#fff', showCancelButton: true, confirmButtonColor: '#f43f5e', cancelButtonColor: '#27272a', confirmButtonText: 'Sí, revocar'
+            }).then(async (result) => {
+                if(result.isConfirmed) {
+                    await updateDoc(doc(db, "comunidades", comunidadId), { admins: arrayRemove(uid) });
+                    actualizarMemoriaComunidad();
+                }
+            });
+        }
+
+        window.expulsarUsuario = function(uid, alias) {
+            Swal.fire({
+                title: `¿Expulsar a ${alias}?`, text: 'Se eliminará su membresía de la comunidad permanentemente.', icon: 'warning',
+                background: '#09090b', color: '#fff', showCancelButton: true, confirmButtonColor: '#f43f5e', cancelButtonColor: '#27272a', confirmButtonText: 'Sí, expulsar'
+            }).then(async (result) => {
+                if(result.isConfirmed) {
+                    // Si era admin, lo quitamos de la lista primero
+                    await updateDoc(doc(db, "comunidades", comunidadId), { admins: arrayRemove(uid) });
+                    // Lo borramos de los miembros
+                    await deleteDoc(doc(db, `comunidades/${comunidadId}/miembros/${uid}`));
+                    Swal.fire({title: 'Expulsado', icon: 'success', background: '#09090b', color: '#fff', timer: 1500, showConfirmButton: false});
+                }
+            });
+        }
+
+        // Refresca la variable local de la comunidad para que los badges se actualicen al instante
+        async function actualizarMemoriaComunidad() {
+            const docSnap = await getDoc(doc(db, "comunidades", comunidadId));
+            if (docSnap.exists()) {
+                datosComunidad = docSnap.data();
+                renderizarLista();
+            }
+        }
+    </script>
+</body>
+</html>

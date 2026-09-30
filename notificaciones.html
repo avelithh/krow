@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificaciones - Krow</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* --- CABECERA --- */
+        header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(18, 18, 22, 0.9);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-volver {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 15px;
+        }
+
+        h1 { margin: 0; font-size: 1.2rem; font-weight: 600; color: #fff; }
+
+        /* --- CONTENEDOR DE ALERTAS --- */
+        #contenedor-notificaciones {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .noti-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .noti-card:hover { background: rgba(255, 255, 255, 0.06); }
+        
+        /* Indicador de notificación nueva */
+        .noti-card.nueva {
+            background: rgba(168, 85, 247, 0.05); /* Tonos morados de Krow */
+            border-left: 4px solid #a855f7;
+        }
+
+        .noti-icono {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            background-color: #121216;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .noti-contenido { flex: 1; }
+        .noti-titulo { margin: 0 0 4px 0; font-size: 0.95rem; font-weight: 600; color: #fff; }
+        .noti-texto { margin: 0; font-size: 0.85rem; color: #a1a1aa; line-height: 1.4; }
+        .noti-tiempo { font-size: 0.7rem; color: #52525b; margin-top: 5px; display: block; }
+        
+        .mensaje-vacio { text-align: center; color: #52525b; margin-top: 40px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="#" id="btn-volver" class="btn-volver">&larr; Volver</a>
+        <h1>Campanita de Alertas</h1>
+    </header>
+
+    <div id="contenedor-notificaciones">
+        <div class="mensaje-vacio">Buscando notificaciones...</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3_P-pr1TObmm8bREQ2g4uLaDamTRHnGI",
+            authDomain: "krow-83002.firebaseapp.com",
+            projectId: "krow-83002",
+            storageBucket: "krow-83002.firebasestorage.app",
+            messagingSenderId: "567485047347",
+            appId: "1:567485047347:web:87fbf4a8b44a657061b946"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const comunidadId = urlParams.get('id');
+        const pjActivoId = localStorage.getItem(`pj_activo_${comunidadId}`);
+
+        if (comunidadId) {
+            document.getElementById('btn-volver').href = `comunidad.html?id=${comunidadId}`;
+        }
+
+        // DICCIONARIO DE ICONOS SEGÚN EL TIPO DE ALERTA
+        const iconos = {
+            'like': '❤️',
+            'comentario': '💬',
+            'chisme': '🔥',
+            'match': '💘',
+            'chat': '✉️',
+            'feed': '📸',
+            'acceso': '🗝️'
+        };
+
+                function escucharNotificaciones() {
+            if (!comunidadId || !pjActivoId) return;
+
+            const contenedor = document.getElementById('contenedor-notificaciones');
+            
+            // Descargamos TODAS las notificaciones de la comunidad sin filtros estrictos de Firebase
+            const notisRef = collection(db, `comunidades/${comunidadId}/notificaciones`);
+            
+            onSnapshot(notisRef, (snapshot) => {
+                contenedor.innerHTML = "";
+                let misNotis = [];
+
+                snapshot.forEach(docSnap => {
+                    const noti = docSnap.data();
+                    
+                    // FILTRO INTELIGENTE EN JAVASCRIPT: 
+                    // Si la alerta es para 'todos' o va dirigida específicamente a tu personaje activo, entra.
+                    if (noti.receptorId === "todos" || noti.receptorId === pjActivoId) {
+                        misNotis.push({ id: docSnap.id, ...noti });
+                    }
+                });
+
+                // Ordenamos de más nueva a más vieja
+                misNotis.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+
+                if (misNotis.length === 0) {
+                    contenedor.innerHTML = '<div class="mensaje-vacio">Todo está tranquilo. No tienes notificaciones nuevas.</div>';
+                    return;
+                }
+
+                misNotis.forEach((noti) => {
+                    const card = document.createElement('div');
+                    card.className = `noti-card ${noti.leida ? '' : 'nueva'}`;
+                    
+                    const bgIcono = noti.avatarUrl ? `background-image: url('${noti.avatarUrl}');` : '';
+                    const emoji = noti.avatarUrl ? '' : (iconos[noti.tipo] || '🔔');
+
+                    card.innerHTML = `
+                        <div class="noti-icono" style="${bgIcono}">${emoji}</div>
+                        <div class="noti-contenido">
+                            <h3 class="noti-titulo">${noti.titulo}</h3>
+                            <p class="noti-texto">${noti.mensaje}</p>
+                            <span class="noti-tiempo">Toca para abrir</span>
+                        </div>
+                    `;
+
+                    card.onclick = async () => {
+                        if (!noti.leida) {
+                            try {
+                                await updateDoc(doc(db, `comunidades/${comunidadId}/notificaciones/${noti.id}`), { leida: true });
+                            } catch (e) { console.error(e); }
+                        }
+                        if (noti.link) window.location.href = noti.link;
+                    };
+                    contenedor.appendChild(card);
+                });
+            });
+        }
+
+        escucharNotificaciones();
+    </script>
+</body>
+</html>

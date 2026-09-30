@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat de Evaluación - Krow</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background-color: #0f0f11;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #chat-fondo {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.2;
+        }
+        header {
+            background: rgba(18, 18, 22, 0.95);
+            border-bottom: 1px solid #27272a;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-info h2 { margin: 0; font-size: 1.2rem; color: #a855f7; }
+        .header-info p { margin: 5px 0 0 0; font-size: 0.85rem; color: #a1a1aa; }
+        .header-acciones { display: flex; gap: 10px; align-items: center; }
+        .btn-header {
+            background: #27272a;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-aprobar { background: #22c55e !important; }
+        .btn-rechazar { background: #ef4444 !important; }
+        #chat-contenedor {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .burbuja {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .burbuja.mia {
+            background: #a855f7;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .burbuja.suya {
+            background: #18181b;
+            border: 1px solid #27272a;
+            color: #e4e4e7;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .remitente {
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+        .zona-input {
+            background: rgba(18, 18, 22, 0.95);
+            border-top: 1px solid #27272a;
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+        }
+        #input-mensaje {
+            flex: 1;
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 10px;
+            padding: 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        #btn-enviar {
+            background: #a855f7;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chat-fondo"></div>
+
+    <header>
+        <div class="header-info">
+            <h2 id="ui-titulo">Revisión de Ficha</h2>
+            <p id="ui-subtitulo">Cargando sala...</p>
+        </div>
+        <div class="header-acciones">
+            <button class="btn-header" id="btn-cambiar-fondo" style="display: none;">Fondo</button>
+            <div id="admin-controls" style="display: none; gap: 10px;">
+                <button class="btn-header btn-rechazar" id="btn-rechazar">Rechazar</button>
+                <button class="btn-header btn-aprobar" id="btn-aprobar">Aprobar</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="chat-contenedor">
+        <!-- Los mensajes aparecerán aquí -->
+    </div>
+
+    <div class="zona-input">
+        <input type="text" id="input-mensaje" placeholder="Escribe un mensaje..." autocomplete="off">
+        <button id="btn-enviar">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+        </button>
+    </div>
+
+      <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3_P-pr1TObmm8BREQ2g4uLaDamTRHnGI",
+            authDomain: "krow-83002.firebaseapp.com",
+            projectId: "krow-83002",
+            storageBucket: "krow-83002.firebasestorage.app",
+            messagingSenderId: "567485047347",
+            appId: "1:567485047347:web:b7fbf4a8b44a657061b946"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const solicitudId = urlParams.get('solicitudId') || urlParams.get('solicitudid');
+
+        let miUsuario = null;
+        let esAdmin = false;
+        let datosSolicitud = null;
+
+        // --- EL TRUCO DE MEMORIA FOTOGRÁFICA ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                miUsuario = user;
+                localStorage.setItem("krow_sesion_respaldo", user.uid); // Guardamos copia de seguridad
+            } else {
+                // Si Firebase falla, sacamos la copia de seguridad
+                const respaldoUid = localStorage.getItem("krow_sesion_respaldo");
+                if (respaldoUid) {
+                    miUsuario = { uid: respaldoUid };
+                }
+            }
+            await inicializarChatEvaluacion();
+        });
+
+        async function inicializarChatEvaluacion() {
+            if (!solicitudId) {
+                document.getElementById('ui-titulo').textContent = "Error";
+                document.getElementById('ui-subtitulo').textContent = "Falta el ID de la solicitud.";
+                return;
+            }
+
+            try {
+                const solSnap = await getDoc(doc(db, "solicitudes", solicitudId));
+                if (!solSnap.exists()) {
+                    document.getElementById('ui-subtitulo').textContent = "La solicitud no existe.";
+                    return;
+                }
+                datosSolicitud = solSnap.data();
+                const comunidadId = datosSolicitud.comunidadId || urlParams.get('comunidadId');
+
+                if (miUsuario && comunidadId) {
+                    const comSnap = await getDoc(doc(db, "comunidades", comunidadId));
+                    if (comSnap.exists() && comSnap.data().creadorId === miUsuario.uid) {
+                        esAdmin = true;
+                    }
+                }
+
+                if (esAdmin) {
+                    document.getElementById('admin-controls').style.display = 'flex';
+                    if(document.getElementById('btn-cambiar-fondo')) document.getElementById('btn-cambiar-fondo').style.display = 'inline-block';
+                    document.getElementById('ui-subtitulo').textContent = `Administrando evaluación de: ${datosSolicitud.alias}`;
+                } else {
+                    document.getElementById('admin-controls').style.display = 'none';
+                    if(document.getElementById('btn-cambiar-fondo')) document.getElementById('btn-cambiar-fondo').style.display = 'none';
+                    document.getElementById('ui-subtitulo').textContent = miUsuario 
+                        ? "Sala de Evaluación" 
+                        : "Modo Prueba (Sin sesión activa)";
+                }
+                
+                document.getElementById('ui-titulo').textContent = "Revisión de Ficha";
+                cargarMensajes();
+            } catch (error) {
+                console.error("Error al cargar:", error);
+                document.getElementById('ui-subtitulo').textContent = "Error de conexión.";
+            }
+        }
+
+        function cargarMensajes() {
+            const chatContenedor = document.getElementById('chat-contenedor');
+            const pathColeccion = collection(db, `solicitudes/${solicitudId}/mensajes`);
+
+            onSnapshot(query(pathColeccion, orderBy("timestamp", "asc")), (snapshot) => {
+                chatContenedor.innerHTML = "";
+
+                if (datosSolicitud) {
+                    const fichaBurbuja = document.createElement('div');
+                    fichaBurbuja.style.cssText = "background: #1e1e24; border: 1px solid #a855f7; padding: 20px; border-radius: 12px; margin: 10px auto 25px auto; max-width: 350px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4);";
+                    fichaBurbuja.innerHTML = `
+                        <h3 style="margin: 0 0 15px 0; color: #a855f7; font-size: 1.15rem; text-transform: uppercase; letter-spacing: 2px;">📄 Solicitud</h3>
+                        <p style="margin: 5px 0; font-size: 0.85rem; color: #a1a1aa; text-transform: uppercase;">Personaje</p>
+                        <p style="margin: 0 0 15px 0; font-size: 1.2rem; color: #fff; font-weight: bold;">${datosSolicitud.personaje}</p>
+                        <p style="margin: 5px 0; font-size: 0.85rem; color: #a1a1aa; text-transform: uppercase;">Alias</p>
+                        <p style="margin: 0 0 15px 0; font-size: 1.1rem; color: #fff;">${datosSolicitud.alias}</p>
+                        ${datosSolicitud.datosExtra ? `<div style="margin-top: 15px; font-size: 0.9rem; color: #e4e4e7; background: #18181b; padding: 12px; border-radius: 8px; text-align: left; white-space: pre-wrap; border-left: 3px solid #a855f7;">${datosSolicitud.datosExtra}</div>` : ''}
+                    `;
+                    chatContenedor.appendChild(fichaBurbuja);
+                }
+
+                if (snapshot.empty) {
+                    const vacio = document.createElement('div');
+                    vacio.style.cssText = "text-align: center; color: #a1a1aa; margin-top: 20px;";
+                    vacio.textContent = "No hay mensajes aún. ¡Comienza la entrevista!";
+                    chatContenedor.appendChild(vacio);
+                    return;
+                }
+
+                let miIdTemporal = sessionStorage.getItem("id_temporal");
+                
+                snapshot.forEach((docSnap) => {
+                    const msg = docSnap.data();
+                    const esMio = (miUsuario && msg.remitenteId === miUsuario.uid) || 
+                                  (!esAdmin && msg.remitenteNombre === datosSolicitud.alias) ||
+                                  (miIdTemporal && msg.remitenteId === miIdTemporal);
+                    
+                    const burbuja = document.createElement('div');
+                    burbuja.className = `burbuja ${esMio ? 'mia' : 'suya'}`;
+                    burbuja.innerHTML = `
+                        <span class="remitente">${msg.remitenteNombre || 'Usuario'}</span>
+                        ${msg.texto}
+                    `;
+                    chatContenedor.appendChild(burbuja);
+                });
+                chatContenedor.scrollTop = chatContenedor.scrollHeight;
+            });
+        }
+
+        const btnEnviar = document.getElementById('btn-enviar');
+        const inputMensaje = document.getElementById('input-mensaje');
+
+        async function enviarMensaje() {
+            const texto = inputMensaje.value.trim();
+            if (!texto) return;
+
+            inputMensaje.value = "";
+            try {
+                if (!sessionStorage.getItem("id_temporal")) sessionStorage.setItem("id_temporal", "anonimo_" + Date.now());
+                const remitenteId = miUsuario ? miUsuario.uid : sessionStorage.getItem("id_temporal");
+                const nombreQuienEnvia = esAdmin ? "Administración" : (datosSolicitud.alias || "Aspirante");
+
+                await addDoc(collection(db, `solicitudes/${solicitudId}/mensajes`), {
+                    texto: texto,
+                    remitenteId: remitenteId,
+                    remitenteNombre: nombreQuienEnvia,
+                    timestamp: serverTimestamp()
+                });
+            } catch (error) {
+                console.error("Error al enviar:", error);
+            }
+        }
+
+        btnEnviar.addEventListener('click', enviarMensaje);
+        inputMensaje.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                enviarMensaje();
+            }
+        });
+
+                // --- LÓGICA DE LOS BOTONES DE ADMIN ---
+        const btnAprobar = document.getElementById('btn-aprobar');
+        const btnRechazar = document.getElementById('btn-rechazar');
+        const btnFondo = document.getElementById('btn-cambiar-fondo');
+
+        if (btnAprobar) {
+            btnAprobar.addEventListener('click', async () => {
+                if (!datosSolicitud || typeof Swal === 'undefined') return;
+                
+                const confirmar = await Swal.fire({
+                    title: '¿Aprobar ficha?',
+                    text: `¿Aceptas a ${datosSolicitud.personaje} en tu comunidad?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, aprobar',
+                    cancelButtonText: 'Cancelar',
+                    background: '#09090b', color: '#fff', confirmButtonColor: '#22c55e'
+                });
+
+                if (confirmar.isConfirmed) {
+                    btnAprobar.textContent = "Procesando...";
+                    btnAprobar.disabled = true;
+                    try {
+                        // 1. Cambiamos el estado de la solicitud
+                        await updateDoc(doc(db, "solicitudes", solicitudId), { estado: "aprobada" });
+                        
+                        // 2. Lo agregamos como miembro oficial de la comunidad
+                        await setDoc(doc(db, `comunidades/${datosSolicitud.comunidadId}/miembros/${datosSolicitud.solicitanteId}`), {
+                            rol: "miembro",
+                            alias: datosSolicitud.alias,
+                            fechaIngreso: serverTimestamp()
+                        }, { merge: true });
+
+                        // 3. Creamos automáticamente su personaje en la base de datos
+                        await addDoc(collection(db, `comunidades/${datosSolicitud.comunidadId}/miembros/${datosSolicitud.solicitanteId}/personajes`), {
+                            nombre: datosSolicitud.personaje,
+                            alias: datosSolicitud.alias,
+                            datosExtra: datosSolicitud.datosExtra || "",
+                            fechaCreacion: serverTimestamp()
+                        });
+
+                        await Swal.fire({title: '¡Ficha Aprobada!', text: 'El aspirante ya es parte oficial de la historia.', icon: 'success', background: '#09090b', color: '#fff'});
+                        window.location.href = `bandeja-solicitudes.html?id=${datosSolicitud.comunidadId}`;
+                    } catch (error) {
+                        console.error("Error al aprobar:", error);
+                        Swal.fire('Error', 'Hubo un problema al aprobar la ficha.', 'error');
+                        btnAprobar.textContent = "Aprobar";
+                        btnAprobar.disabled = false;
+                    }
+                }
+            });
+        }
+
+        if (btnRechazar) {
+            btnRechazar.addEventListener('click', async () => {
+                if (!datosSolicitud || typeof Swal === 'undefined') return;
+
+                const confirmar = await Swal.fire({
+                    title: '¿Rechazar ficha?',
+                    text: `La solicitud de ${datosSolicitud.personaje} será denegada de forma permanente.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, rechazar',
+                    cancelButtonText: 'Cancelar',
+                    background: '#09090b', color: '#fff', confirmButtonColor: '#ef4444'
+                });
+
+                if (confirmar.isConfirmed) {
+                    btnRechazar.textContent = "Rechazando...";
+                    btnRechazar.disabled = true;
+                    try {
+                        // Cambiamos el estado a rechazada
+                        await updateDoc(doc(db, "solicitudes", solicitudId), { estado: "rechazada" });
+                        await Swal.fire({title: 'Ficha Rechazada', icon: 'info', background: '#09090b', color: '#fff'});
+                        window.location.href = `bandeja-solicitudes.html?id=${datosSolicitud.comunidadId}`;
+                    } catch (error) {
+                        console.error("Error al rechazar:", error);
+                        btnRechazar.textContent = "Rechazar";
+                        btnRechazar.disabled = false;
+                    }
+                }
+            });
+        }
+
+        if (btnFondo) {
+            btnFondo.addEventListener('click', async () => {
+                if (typeof Swal === 'undefined') return;
+                const { value: urlFondo } = await Swal.fire({
+                    title: 'Fondo del Chat',
+                    input: 'url',
+                    inputPlaceholder: 'https://ejemplo.com/imagen.jpg',
+                    showCancelButton: true,
+                    background: '#09090b', color: '#fff'
+                });
+                
+                if (urlFondo) {
+                    const fondoDiv = document.getElementById('chat-fondo');
+                    if(fondoDiv) fondoDiv.style.backgroundImage = `url('${urlFondo}')`;
+                    // Opcional: guardamos el fondo en la memoria local para esta solicitud
+                    localStorage.setItem(`fondo_chat_${solicitudId}`, urlFondo);
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

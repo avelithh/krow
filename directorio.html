@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directorio de Personajes - Krow</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: #09090b; color: #fff; padding-bottom: 20px; }
+        a { text-decoration: none; color: inherit; }
+
+        .header { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid #27272a; background: #121216; position: sticky; top: 0; z-index: 10; }
+        .btn-volver { background: transparent; border: none; color: #a1a1aa; font-size: 1.5rem; cursor: pointer; margin-right: 15px; padding: 0; }
+        .header h1 { margin: 0; font-size: 1.3rem; font-weight: 700; color: #a855f7; }
+
+        .galeria-container { padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+        
+        .tarjeta-pj { 
+            background: #18181b; border: 1px solid #27272a; border-radius: 12px; overflow: hidden; 
+            transition: transform 0.2s, border-color 0.2s; cursor: pointer; display: flex; flex-direction: column;
+        }
+        .tarjeta-pj:hover { transform: translateY(-3px); border-color: #a855f7; }
+        
+        .pj-avatar { width: 100%; height: 180px; background-color: #27272a; background-size: cover; background-position: center; }
+        .pj-info { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+        
+        .pj-nombre { font-weight: 700; font-size: 1rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pj-user { font-size: 0.75rem; color: #a1a1aa; font-weight: 500; }
+
+        .estado-carga { grid-column: 1 / -1; text-align: center; color: #a1a1aa; padding: 40px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="btn-volver" id="btn-volver">←</button>
+        <h1>Directorio del Universo</h1>
+    </div>
+
+    <div class="galeria-container" id="contenedor-personajes">
+        <div class="estado-carga">Escaneando personajes...</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyC3_P-prlT0bmm8bREQ2g4uLaDamTRHnGI", authDomain: "krow-83002.firebaseapp.com", projectId: "krow-83002", storageBucket: "krow-83002.firebasestorage.app", messagingSenderId: "567485047347", appId: "1:567485047347:web:87fbf4a8b44a657061b946" };
+        const app = initializeApp(firebaseConfig); 
+        const db = getFirestore(app);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const comunidadId = urlParams.get('id');
+
+        document.getElementById("btn-volver").onclick = () => window.location.href = `comunidad.html?id=${comunidadId}`;
+
+        async function cargarDirectorio() {
+            if (!comunidadId) return;
+            const contenedor = document.getElementById('contenedor-personajes');
+            let htmlDirectorio = '';
+            let contadorPersonajes = 0;
+
+            try {
+                // 1. Obtenemos a todos los miembros de la comunidad
+                const miembrosSnap = await getDocs(collection(db, `comunidades/${comunidadId}/miembros`));
+                
+                // 2. Por cada miembro, buscamos su carpeta de personajes
+                for (const miembroDoc of miembrosSnap.docs) {
+                    const uidMiembro = miembroDoc.id;
+                    const datosMiembro = miembroDoc.data();
+                    const aliasPropietario = datosMiembro.alias || 'Usuario Anónimo';
+
+                    const personajesSnap = await getDocs(collection(db, `comunidades/${comunidadId}/miembros/${uidMiembro}/personajes`));
+                    
+                    personajesSnap.forEach(pjDoc => {
+                        const pj = pjDoc.data();
+                        const pjId = pjDoc.id;
+                        contadorPersonajes++;
+
+                        // La magia del enlace: mandamos el ID de la comunidad, el ID del dueño y el ID del personaje
+                        htmlDirectorio += `
+                            <a href="perfil.html?id=${comunidadId}&uid=${uidMiembro}&pj=${pjId}" class="tarjeta-pj">
+                                <div class="pj-avatar" style="background-image: url('${pj.avatar || ''}')"></div>
+                                <div class="pj-info">
+                                    <div class="pj-nombre">${pj.nombre || 'Desconocido'}</div>
+                                    <div class="pj-user">👤 de ${aliasPropietario}</div>
+                                </div>
+                            </a>
+                        `;
+                    });
+                }
+
+                if (contadorPersonajes === 0) {
+                    contenedor.innerHTML = `<div class="estado-carga">Aún no hay personajes creados en esta comunidad.</div>`;
+                } else {
+                    contenedor.innerHTML = htmlDirectorio;
+                }
+
+            } catch (error) {
+                contenedor.innerHTML = `<div class="estado-carga" style="color: #f43f5e;">Error cargando el directorio.</div>`;
+                console.error("Error:", error);
+            }
+        }
+
+        cargarDirectorio();
+    </script>
+</body>
+</html>
