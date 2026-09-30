@@ -19,7 +19,6 @@
             margin-right: auto;
         }
 
-        /* --- CABECERA --- */
         header {
             display: flex;
             align-items: center;
@@ -40,7 +39,6 @@
         .header-textos h1 { margin: 0; font-size: 1.5rem; font-weight: 800; color: #fff; }
         .header-textos p { margin: 2px 0 0 0; color: #a1a1aa; font-size: 0.9rem; }
 
-        /* --- LISTA DE SOLICITUDES --- */
         .contenedor-lista {
             display: flex;
             flex-direction: column;
@@ -129,14 +127,12 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Obtener la comunidad actual de la URL
         const urlParams = new URLSearchParams(window.location.search);
         const comunidadId = urlParams.get('id');
 
         const listaSolicitudes = document.getElementById("lista-solicitudes");
-        const btnVolver = document.getElementById("btn-volver");
-
-        // Configurar botón de volver al muro
+        const btnVolver = document.getElementById("btn");
+      
         if(comunidadId) {
             btnVolver.href = `comunidad.html?id=${comunidadId}`;
         } else {
@@ -153,13 +149,11 @@
 
         async function cargarSolicitudes() {
             try {
-                // Pedimos TODAS las solicitudes de esta comunidad
                 const q = query(collection(db, "solicitudes"), where("comunidadId", "==", comunidadId));
                 const querySnapshot = await getDocs(q);
 
                 listaSolicitudes.innerHTML = "";
 
-                // Filtramos manualmente solo las "pendientes" (para evitar errores de indexación en Firebase al inicio)
                 const solicitudesPendientes = [];
                 querySnapshot.forEach((doc) => {
                     if(doc.data().estado === "pendiente") {
@@ -177,7 +171,6 @@
                     return;
                 }
 
-                // Dibujar cada solicitud
                 solicitudesPendientes.forEach((solicitud) => {
                     const linkChat = `chat-solicitud.html?solicitudId=${solicitud.id}&comunidadId=${comunidadId}`;
                     

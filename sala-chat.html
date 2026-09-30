@@ -103,7 +103,6 @@
     </header>
 
     <div id="chat-contenedor">
-        <!-- Los mensajes aparecerán aquí -->
     </div>
 
     <div class="zona-input">
@@ -130,8 +129,6 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
-        // Variables exactas de tu código original
         const urlParams = new URLSearchParams(window.location.search);
         const comunidadId = urlParams.get('id');
         const chatId = urlParams.get('chat');
@@ -142,7 +139,6 @@
         let misPersonajes = [];
         let personajeActivo = null;
 
-        // Referencias flexibles (por si cambiaste el HTML)
         const tituloUI = document.getElementById('ui-titulo-chat') || document.getElementById('ui-titulo');
         const subtituloUI = document.getElementById('ui-subtitulo-chat') || document.getElementById('ui-subtitulo');
         const contenedorMensajes = document.getElementById('contenedor-mensajes') || document.getElementById('chat-contenedor');
@@ -188,7 +184,6 @@
 
             if(!contenedorMensajes) return;
             
-            // Aquí está la magia: Usamos el ID único del chat privado
             const pathColeccion = collection(db, `comunidades/${comunidadId}/chatsPrivados/${chatId}/mensajes`);
 
             onSnapshot(query(pathColeccion, orderBy("timestamp", "asc")), (snapshot) => {

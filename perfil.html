@@ -68,8 +68,8 @@
         .circulo-tema.activo { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.3);}
 
       .btn-chat {
-    background: rgba(255, 255, 255, 0.05); /* Sutil transparencia */
-    border: 1px solid rgba(255, 255, 255, 0.15); /* Borde sutil */
+    background: rgba(255, 255, 255, 0.05); 
+    border: 1px solid rgba(255, 255, 255, 0.15); 
     color: white;
     backdrop-filter: blur(10px);
     padding: 12px 20px;
@@ -184,7 +184,6 @@
                 return;
             }
             
-            // --- LÓGICA DE BOTONES PRIVADOS Y MATCH ---
             if (mipjActivo && mipjActivo !== pjPerfilId) {
                 const btnChat = document.getElementById("btn-iniciar-chat");
                 const btnMatch = document.getElementById("btn-hacer-match");
@@ -198,12 +197,10 @@
             const chatid = [mipjActivo, pjPerfilId].sort().join('_');
             
                     try {
-            // 1. Descargamos rápido TU información
             const miPjSnap = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${mipjActivo}`));
             let miNombre = "Anónimo"; let miAvatar = "";
             if (miPjSnap.exists()) { miNombre = miPjSnap.data().nombre; miAvatar = miPjSnap.data().avatarUrl || ""; }
 
-            // 2. Guardamos el chat
             await setDoc(doc(db, `comunidades/${comunidadId}/chatsPrivados/${chatid}`), {
                 chatId: chatid,
                 participantes: [mipjActivo, pjPerfilId],
@@ -214,7 +211,6 @@
                 ultimaActualizacion: serverTimestamp()
             }, { merge: true });
 
-            // 3. ENVIAMOS LA NOTIFICACIÓN AQUÍ ADENTRO (¡No afuera!)
             await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
                 tipo: 'chat',
                 titulo: 'Nuevo Rol Privado',
@@ -230,7 +226,6 @@
             console.error("Error al registrar chat privado:", e);
         }
 
-        // 4. El viaje a la sala (afuera de todo)
         window.location.href = `sala-chat.html?id=${comunidadId}&chat=${chatid}&target=${pjPerfilId}&targetUid=${uidPerfil}&miUid=${usuarioActual.uid}&miPj=${mipjActivo}`;
         };
 
@@ -265,25 +260,23 @@
                     let miNombre = "Alguien"; let miAvatar = "";
                     if (miPjSnap.exists()) { miNombre = miPjSnap.data().nombre; miAvatar = miPjSnap.data().avatarUrl || ""; }
 
-                    // 2. Alerta para el OTRO personaje (¡Se revela quién eres!)
                     await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
                         tipo: 'match',
                         titulo: '¡MATCH MUTUO! 💖',
                         mensaje: `¡A ${miNombre} también le gustas! Ya pueden enviarse mensajes.`,
                         receptorId: pjPerfilId,
-                        avatarUrl: miAvatar, // Aquí ya sale tu carita en lugar del anónimo
+                        avatarUrl: miAvatar, 
                         link: `perfil.html?id=${comunidadId}&pj=${mipjActivo}&uid=${usuarioActual.uid}`,
                         leida: false,
                         timestamp: serverTimestamp()
                     });
 
-                    // 3. Alerta para TI (Para que tengas el trofeo en tu campanita)
                     await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
                         tipo: 'match',
                         titulo: '¡MATCH MUTUO! 💖',
                         mensaje: `¡La chispa con ${pjActivo.nombre} es mutua!`,
                         receptorId: mipjActivo,
-                        avatarUrl: pjActivo.avatarUrl || "", // La carita de tu crush
+                        avatarUrl: pjActivo.avatarUrl || "", 
                         link: `perfil.html?id=${comunidadId}&pj=${pjPerfilId}&uid=${uidPerfil}`,
                         leida: false,
                         timestamp: serverTimestamp()
@@ -291,14 +284,15 @@
 
                                 await updateDoc(matchInversoRef, { mutuo: true });
                                 Swal.fire({ title: '¡MATCH MUTUO! ❤️', text: '¡Ambos sintieron la chispa!', icon: 'success', background: '#121216', color: '#fff' });
-                            } else {
-                                                  // --- ENVIAR NOTIFICACIÓN DE CHISPA ---
+                            } 
+                               else {
+
                     await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
                         tipo: 'match',
                         titulo: '¡Alguien te lanzó una chispa! 💘',
                         mensaje: 'Un personaje misterioso está interesado en ti. Sigue interactuando para descubrir si hay Match mutuo.',
                         receptorId: pjPerfilId,
-                        avatarUrl: '', // Lo dejamos vacío para que use el emoji de corazón por defecto y sea anónimo
+                        avatarUrl: '', 
                         link: `comunidad.html?id=${comunidadId}`,
                         leida: false,
                         timestamp: serverTimestamp()
@@ -315,13 +309,11 @@
             }
             
             try {
-                // --- DESCARGAMOS EL PERFIL ---
                 const pjSnap = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${uidPerfil}/personajes/${pjPerfilId}`));
                 if(pjSnap.exists()) {
                     pjActivo = { id: pjSnap.id, ...pjSnap.data() };
                     pintarPerfil();
                     
-                    // Si el perfil es el tuyo, mostramos el botón de editar
                     if (mipjActivo === pjPerfilId) {
                         const btnEditar = document.getElementById("btn-editar-perfil");
                         if (btnEditar) btnEditar.style.display = "block";
@@ -399,7 +391,6 @@
 
 
         function cargarCorcho() {
-    // Calculamos el UID del dueño del perfil de forma segura sin depender de variables externas
     const duenoUid = urlParams.get('uid') || (usuarioActual ? usuarioActual.uid : '');
     if (!pjActivo || !pjActivo.id) return;
 
@@ -434,7 +425,6 @@
             else { audioObj.play(); document.getElementById('ui-play-icon').innerHTML = '<b>||</b>'; estaReproduciendo = true; }
         });
 
-        // 5. LÓGICA DEL BOTÓN DE HACER MATCH
 const btnHacerMatch = document.getElementById('btn-hacer-match');
 if (btnHacerMatch) {
     btnHacerMatch.addEventListener('click', async () => {
@@ -443,7 +433,7 @@ if (btnHacerMatch) {
         }
 
         try {
-            // Referencia a los registros de cerrojitos/matches en esta comunidad
+          
             const matchRef = doc(db, `comunidades/${comunidadId}/matches`, `${mipjActivo}_${pjPerfilId}`);
             const matchInversoRef = doc(db, `comunidades/${comunidadId}/matches`, `${pjPerfilId}_${mipjActivo}`);
 
@@ -458,11 +448,9 @@ if (btnHacerMatch) {
                 });
             }
 
-            // Verificamos si el otro usuario ya te había dado match antes (Match Mutuo)
             const matchInversoSnap = await getDoc(matchInversoRef);
             const esMutuo = matchInversoSnap.exists();
 
-            // Guardamos tu "match" en la base de datos
             await setDoc(matchRef, {
                 remitentePJ: mipjActivo,
                 destinatarioPJ: pjPerfilId,
@@ -473,7 +461,7 @@ if (btnHacerMatch) {
             });
 
             if (esMutuo) {
-                // Actualizamos también el inverso para marcarlo como mutuo
+              
                 await updateDoc(matchInversoRef, { mutuo: true });
                 
                 await Swal.fire({
@@ -526,10 +514,9 @@ if (btnHacerMatch) {
                 });
 
                       if(formValues && formValues.titulo) {
-            // 1. Guarda la página en el diario
+            
             await addDoc(collection(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${pjActivo.id}/diario`), { ...formValues, timestamp: serverTimestamp() });
             
-            // 2. Envía la notificación global
             await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
                 tipo: 'feed',
                 titulo: 'Nuevo fragmento 📖',
@@ -579,10 +566,8 @@ if (btnHacerMatch) {
                         }
                     }
 
-                    // Calculamos el UID del dueño del perfil de forma segura
                     const duenoUid = urlParams.get('uid') || usuarioActual.uid;
 
-                    // 1. Guardamos la nota usando el UID seguro
                     await addDoc(collection(db, `comunidades/${comunidadId}/miembros/${duenoUid}/personajes/${pjActivo.id}/corcho`), { 
                         texto: formValues.texto, 
                         estilo: window.estiloElegido, 
@@ -593,7 +578,6 @@ if (btnHacerMatch) {
 
                     let autorNoti = formValues.anonimo ? "Alguien misterioso" : nombreEscritor;
 
-                    // 2. Enviamos la notificación al dueño del perfil
                     await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
                         tipo: 'comentario',
                         titulo: 'Nueva nota en tu Tablero 📌',

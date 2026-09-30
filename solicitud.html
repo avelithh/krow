@@ -119,7 +119,7 @@
 
         <div class="form-group">
             <label>Personaje Solicitado / Avatar</label>
-            <input type="text" id="input-personaje" placeholder="Ej. Caín, OC Gótico, Estudiante de intercambio..." autocomplete="off">
+            <input type="text" id="input-personaje" placeholder="Ej. Caín, OC, etc" autocomplete="off">
         </div>
 
         <div class="row-doble">
@@ -159,7 +159,6 @@
 
         let usuarioActual = null;
 
-        // OBTENER PARÁMETROS DE LA URL (?id=...&nombre=...)
         const urlParams = new URLSearchParams(window.location.search);
         const comunidadId = urlParams.get('id');
         const comunidadNombre = urlParams.get('nombre') || 'Universo Desconocido';
@@ -167,7 +166,6 @@
         const UI_NombreComunidad = document.getElementById("nombre-comunidad-ui");
         const btnEnviarFicha = document.getElementById("btn-enviar-ficha");
 
-        // Mostrar el nombre real de la comunidad
         UI_NombreComunidad.textContent = `Destino: ${comunidadNombre}`;
 
         onAuthStateChanged(auth, (user) => {
@@ -192,7 +190,6 @@
             btnEnviarFicha.disabled = true;
 
             try {
-                // Guardar la solicitud en Firestore
                 const docRef = await addDoc(collection(db, "solicitudes"), {
                     comunidadId: comunidadId,
                     comunidadNombre: comunidadNombre,
@@ -202,7 +199,7 @@
                     alias: alias,
                     datosExtra: datos,
                     usuarioId: auth.currentUser.uid,
-                    estado: "pendiente", // pendiente, aprobada, rechazada
+                    estado: "pendiente",
                     fechaSolicitud: serverTimestamp()
                 });
 
@@ -215,7 +212,6 @@
                     timer: 1800,
                     showConfirmButton: false
                 }).then(() => {
-                    // Redirigir a la sala de chat de evaluación
                     window.location.href = `chat-solicitud.html?solicitudId=${docRef.id}&comunidadId=${comunidadId}`;
                 });
 

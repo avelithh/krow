@@ -35,7 +35,6 @@
 
         .btn-opciones { background: none; border: none; color: #a1a1aa; font-size: 1.2rem; cursor: pointer; padding: 5px 10px; }
         
-        /* Menú de opciones de cada usuario */
         .menu-usuario { display: none; position: absolute; right: 30px; background: #121216; border: 1px solid #27272a; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 100; min-width: 160px; }
         .menu-item { display: block; padding: 12px 15px; font-size: 0.85rem; border-bottom: 1px solid #27272a; cursor: pointer; color: #fff; background: transparent; border: none; width: 100%; text-align: left; }
         .menu-item:hover { background: #27272a; }
@@ -72,7 +71,6 @@
         let datosComunidad = null;
         let listaMiembros = [];
 
-        // Cerrar menús al hacer click fuera
         window.addEventListener('click', (e) => {
             if (!e.target.matches('.btn-opciones')) {
                 document.querySelectorAll('.menu-usuario').forEach(m => m.style.display = 'none');
@@ -116,7 +114,6 @@
             const contenedor = document.getElementById('contenedor-usuarios');
             contenedor.innerHTML = '';
 
-            // Filtrar y Ordenar Alfabéticamente por Alias
             let filtrados = listaMiembros.filter(m => {
                 const alias = (m.alias || 'Usuario Desconocido').toLowerCase();
                 return alias.includes(termino);
@@ -140,7 +137,6 @@
                 if(esCreador) badgeHTML = `<div class="badge-rol badge-creador">Creador</div>`;
                 else if(esAdmin) badgeHTML = `<div class="badge-rol badge-admin">Admin</div>`;
 
-                // Construcción de Opciones del Menú (No puedes borrar ni modificar al Creador)
                 let menuHTML = '';
                 if(!esCreador && miembro.id !== usuarioActual.uid) {
                     if(!esAdmin) {
@@ -173,11 +169,10 @@
             });
         }
 
-        // Búsqueda en tiempo real
         document.getElementById('buscador').addEventListener('input', renderizarLista);
 
         window.toggleMenu = function(id, event) {
-            event.stopPropagation(); // Evita que se cierre instantáneamente
+            event.stopPropagation(); 
             document.querySelectorAll('.menu-usuario').forEach(m => {
                 if(m.id !== `menu-${id}`) m.style.display = 'none';
             });
@@ -215,16 +210,13 @@
                 background: '#09090b', color: '#fff', showCancelButton: true, confirmButtonColor: '#f43f5e', cancelButtonColor: '#27272a', confirmButtonText: 'Sí, expulsar'
             }).then(async (result) => {
                 if(result.isConfirmed) {
-                    // Si era admin, lo quitamos de la lista primero
                     await updateDoc(doc(db, "comunidades", comunidadId), { admins: arrayRemove(uid) });
-                    // Lo borramos de los miembros
                     await deleteDoc(doc(db, `comunidades/${comunidadId}/miembros/${uid}`));
                     Swal.fire({title: 'Expulsado', icon: 'success', background: '#09090b', color: '#fff', timer: 1500, showConfirmButton: false});
                 }
             });
         }
 
-        // Refresca la variable local de la comunidad para que los badges se actualicen al instante
         async function actualizarMemoriaComunidad() {
             const docSnap = await getDoc(doc(db, "comunidades", comunidadId));
             if (docSnap.exists()) {

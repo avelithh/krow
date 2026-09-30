@@ -11,7 +11,6 @@
         body { margin: 0; font-family: 'Inter', sans-serif; background-color: #09090b; color: #fff; padding-bottom: 80px; overflow-x: hidden; }
         a { text-decoration: none; color: inherit; }
 
-        /* HEADER & BANNER */
         .btn-volver { position: absolute; top: 15px; left: 15px; z-index: 10; background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1); }
         .banner-comunidad { width: 100%; height: 180px; background-color: #27272a; background-size: cover; background-position: center; position: relative; }
         .banner-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: linear-gradient(to top, #09090b, transparent); }
@@ -19,7 +18,6 @@
         .info-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 20px; margin-top: -30px; position: relative; z-index: 5; }
         .info-titulos h1 { margin: 0; font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }
         
-        /* MENU OPCIONES SUPERIOR */
         .btn-opciones { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; padding: 5px; }
         .dropdown-opciones { display: none; position: absolute; right: 20px; top: 30px; background: #18181b; border: 1px solid #27272a; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); min-width: 200px; z-index: 100; }
         .opcion-item { display: block; padding: 12px 15px; font-size: 0.9rem; border-bottom: 1px solid #27272a; cursor: pointer; transition: background 0.2s; }
@@ -27,24 +25,18 @@
         .opcion-peligro { color: #be123c; }
         .solo-admin { display: none; }
 
-        /* BARRA PERSONAJE LOCAL */
         .barra-perfil-local { background: #121216; margin: 20px; padding: 15px; border-radius: 12px; border: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; }
         .perfil-local-info { display: flex; align-items: center; gap: 12px; }
         .avatar-local { width: 45px; height: 45px; border-radius: 50%; background-color: #27272a; background-size: cover; background-position: center; border: 2px solid #a855f7;}
         .btn-cambiar-perfil { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; }
 
-        /* MODAL PERSONAJES JS */
         .pj-item { display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; background: #18181b; border: 1px solid transparent; transition: all 0.2s; }
         .pj-item:hover { background: #27272a; }
         .pj-item.activo { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
         .pj-avatar { width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; }
         .pj-nombre { flex-grow: 1; font-weight: 600; }
         .pj-check { color: #a855f7; font-weight: bold; }
-
-        /* FEED / MURO */
         .feed-container { padding: 0 20px 20px 20px; }
-        
-        /* NAVBAR INFERIOR */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #09090b; border-top: 1px solid #27272a; display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #71717a; font-size: 0.7rem; font-weight: 600; gap: 4px; position: relative; }
         .nav-item.activo { color: #fff; }
@@ -88,13 +80,9 @@
         <div style="position: relative;">
             <button class="btn-opciones" id="btn-opciones">⋮</button>
             <div class="dropdown-opciones" id="menu-opciones">
-                <!-- Para Todos -->
                 <a href="#" class="opcion-item" id="opcion-lista-personajes">👥 Directorio de Personajes</a>
-                <!-- Solo Admins -->
                 <a href="#" class="opcion-item solo-admin" id="opcion-lista-usuarios">⚙️ Gestión de Usuarios (Admins)</a>
-                <!-- Salir al index -->
                 <a href="#" class="opcion-item" id="opcion-salir-definitivo">🚪 Abandonar Comunidad</a>
-                <!-- Peligro -->
                 <a href="#" class="opcion-item opcion-peligro solo-admin" id="opcion-eliminar">⚠️ Eliminar comunidad</a>
             </div>
         </div>
@@ -118,7 +106,6 @@
         </div>
     </div>
 
-    <!-- Barra Inferior de 6 Botones -->
     <div class="bottom-nav">
         <a href="#" class="nav-item activo" id="nav-feed"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><span>Feed</span></a>
         
@@ -135,7 +122,6 @@
 
         <a href="#" class="nav-item" id="nav-perfil"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Perfil</span></a>
 
-        <!-- Reclutas con el icono correcto (Exclamación) - Solo Admins -->
         <a href="#" class="nav-item solo-admin-flex" id="nav-solicitudes" style="display: none;">
             <div class="badge-num" id="badge-reclutas-num">0</div>
             <svg viewBox="0 0 24 24"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
@@ -155,7 +141,6 @@
         let comunidadId = urlParams.get('id') || localStorage.getItem('krow_comunidad_activa');
         let usuarioActual = null;
 
-        // Lógica del menú de opciones
         document.getElementById('btn-opciones').addEventListener('click', () => {
             const menu = document.getElementById('menu-opciones');
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
@@ -175,7 +160,7 @@
         document.getElementById("nav-notif").href = `notificaciones.html?id=${comunidadId}`;
         document.getElementById("nav-chismes").href = `chismes.html?id=${comunidadId}`;
         document.getElementById("opcion-lista-personajes").onclick = (e) => {
-    e.preventDefault(); // Evita que la página salte al hacer clic por el href="#"
+    e.preventDefault(); 
     window.location.href = `directorio.html?id=${comunidadId}`;
 };
 
@@ -229,9 +214,8 @@
         }
     });
 
-              // Función para abandonar la comunidad definitivamente (Aniquilación total)
         document.getElementById('opcion-salir-definitivo').addEventListener('click', () => {
-            document.getElementById('menu-opciones').style.display = 'none'; // Ocultar menú
+            document.getElementById('menu-opciones').style.display = 'none'; 
             Swal.fire({
                 title: '¿Abandonar el universo?',
                 text: 'Esto borrará tu membresía y TODOS tus personajes de esta comunidad. Es irreversible.',
@@ -243,21 +227,15 @@
                 if (result.isConfirmed) {
                     Swal.fire({title: 'Desintegrando datos...', allowOutsideClick: false, background: '#121216', color: '#fff', didOpen: () => { Swal.showLoading() }});
                     try {
-                        // 1. Buscar todos los personajes del usuario en esta comunidad
                         const pjsRef = collection(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes`);
                         const pjsSnap = await getDocs(pjsRef);
-                        
-                        // 2. Borrar cada personaje uno por uno
                         for (const pjDoc of pjsSnap.docs) {
                             await deleteDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${pjDoc.id}`));
                         }
 
-                        // 3. Borrar el registro del miembro
                         await deleteDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}`));
-                        
-                        // 4. Limpiar la memoria de la tablet y salir
                         localStorage.removeItem(`pj_activo_${comunidadId}`);
-                        localStorage.removeItem('krow_comunidad_activa'); // Borramos la huella de la comunidad
+                        localStorage.removeItem('krow_comunidad_activa'); 
                         window.location.href = "index.html";
                     } catch (error) {
                         Swal.fire('Error', 'No se pudo procesar la salida.', 'error');
@@ -266,14 +244,12 @@
             });
         });
 
-              // Función para que el Creador destruya la comunidad
         const btnEliminarCom = document.getElementById('opcion-eliminar');
         
         if (btnEliminarCom) {
             btnEliminarCom.addEventListener('click', (e) => {
-                e.preventDefault(); // Evita que el enlace '#' te salte hacia arriba
-                document.getElementById('menu-opciones').style.display = 'none'; // Oculta el menú
-                
+                e.preventDefault(); 
+                document.getElementById('menu-opciones').style.display = 'none'; 
                 Swal.fire({
                     title: '¿Destruir el universo?',
                     text: 'Esta acción es IRREVERSIBLE. Se borrará la comunidad y expulsará a todos los miembros.',
@@ -291,14 +267,11 @@
                         });
                         
                         try {
-                            // Borramos el documento principal de la comunidad
                             await deleteDoc(doc(db, "comunidades", comunidadId));
                             
-                            // Limpiamos la memoria local
                             localStorage.removeItem(`pj_activo_${comunidadId}`);
                             localStorage.removeItem('krow_comunidad_activa');
                             
-                            // Lo mandamos de regreso al Hub
                             window.location.href = "hub.html";
                         } catch (error) {
                             Swal.fire({title: 'Error', text: 'El universo se resiste: ' + error.message, icon: 'error', background: '#09090b', color: '#fff'});
@@ -404,25 +377,20 @@
         }
 
               window.toggleLike = async function(postId, tieneMiLike) {
-            // Obtenemos al personaje y validamos
             const pjActualId = localStorage.getItem(`pj_activo_${comunidadId}`);
             if(!pjActualId) return Swal.fire('Espectador', 'Necesitas un personaje activo para dar like.', 'warning');
 
             const postRef = doc(db, `comunidades/${comunidadId}/feed/${postId}`);
             try {
                 if (tieneMiLike) {
-                    // Quitamos el ID del personaje (Quitar Like)
                     await updateDoc(postRef, { likes: arrayRemove(pjActualId) });
                 } else {
-                    // Agregamos el ID del personaje (Dar Like)
                     await updateDoc(postRef, { likes: arrayUnion(pjActualId) });
 
-                    // --- CARTERO DE NOTIFICACIÓN DE LIKE ---
                     const postSnap = await getDoc(postRef);
                     if (postSnap.exists()) {
                         const postData = postSnap.data();
                         
-                        // Si el post no es tuyo, enviamos la alerta al autor
                         if (postData.autorId !== pjActualId) {
                             const miSnap = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${pjActualId}`));
                             const nombreFan = miSnap.exists() ? miSnap.data().nombre : 'Alguien';
@@ -457,14 +425,11 @@
                     return; 
                 }
 
-                // Extraemos el ID del personaje activo
                 const pjActualId = localStorage.getItem(`pj_activo_${comunidadId}`);
 
                 snapshot.forEach(docSnap => {
                     const post = docSnap.data();
                     const postId = docSnap.id;
-                    
-                    // Lógica de Likes (ahora busca el ID del personaje, no del usuario)
                     const likesArr = post.likes || [];
                     const tieneMiLike = pjActualId ? likesArr.includes(pjActualId) : false;
                     const numLikes = likesArr.length;
@@ -507,7 +472,7 @@
             if (!pjActualId) return Swal.fire('Espectador', 'Necesitas un avatar activo para interactuar.', 'warning');
             
             let nombrePj = document.getElementById("ui-pj-nombre").textContent;
-            let avatarPj = document.getElementById("ui-pj-avatar").style.backgroundImage.slice(5, -2); // Limpia el url("")
+            let avatarPj = document.getElementById("ui-pj-avatar").style.backgroundImage.slice(5, -2); 
 
             Swal.fire({
                 title: 'Comentarios',
@@ -557,7 +522,6 @@
             input.disabled = true;
 
             try {
-                // 1. Guardamos el comentario
                 await addDoc(collection(db, `comunidades/${comunidadId}/feed/${postId}/comentarios`), {
                     autorId: usuarioActual.uid,
                     autorNombre: autorNombre,
@@ -572,10 +536,8 @@
                     const postData = postSnap.data();
                     let currentCount = postData.contadorComentarios || 0;
                     
-                    // 2. Actualizamos el contador de comentarios
                     await updateDoc(postRef, { contadorComentarios: currentCount + 1 });
 
-                    // --- 3. CARTERO DE NOTIFICACIÓN DE COMENTARIO ---
                     const pjActualId = localStorage.getItem(`pj_activo_${comunidadId}`);
                     if (postData.autorId !== pjActualId) {
                         const miSnap = await getDoc(doc(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes/${pjActualId}`));

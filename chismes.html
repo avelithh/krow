@@ -183,10 +183,8 @@
             });
         }
 
-        // --- EL BOTÓN DE FUERZA BRUTA ---
         document.getElementById("btn-crear-nota").onclick = async () => {
             
-            // Si el código olvidó tu personaje, lo va a buscar a la base de datos a la fuerza.
             if(!pjActivo) { 
                 Swal.fire({title: 'Buscando tu personaje...', background: '#121216', color: '#fff', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 const snap = await getDocs(collection(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes`));
@@ -229,14 +227,12 @@
             });
 
                   if (formValues && formValues[0]) {
-            // 1. Guardamos el chisme en la base de datos
             await addDoc(collection(db, "comunidades", comunidadId, "chismes"), {
                 texto: formValues[0], estilo: window.estiloElegido, anonimo: formValues[1],
                 autorId: usuarioActual.uid, autorNombre: pjActivo.nombre, autorAvatar: pjActivo.avatarUrl,
                 timestamp: serverTimestamp()
             });
 
-            // 2. Enviamos la notificación global (aviso de chisme)
             let autorChisme = formValues[1] ? "Alguien anónimo" : pjActivo.nombre;
             let avatarChisme = formValues[1] ? "" : (pjActivo.avatarUrl || "");
 

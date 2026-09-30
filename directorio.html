@@ -62,10 +62,8 @@
             let contadorPersonajes = 0;
 
             try {
-                // 1. Obtenemos a todos los miembros de la comunidad
                 const miembrosSnap = await getDocs(collection(db, `comunidades/${comunidadId}/miembros`));
                 
-                // 2. Por cada miembro, buscamos su carpeta de personajes
                 for (const miembroDoc of miembrosSnap.docs) {
                     const uidMiembro = miembroDoc.id;
                     const datosMiembro = miembroDoc.data();
@@ -78,7 +76,6 @@
                         const pjId = pjDoc.id;
                         contadorPersonajes++;
 
-                        // La magia del enlace: mandamos el ID de la comunidad, el ID del dueño y el ID del personaje
                         htmlDirectorio += `
                             <a href="perfil.html?id=${comunidadId}&uid=${uidMiembro}&pj=${pjId}" class="tarjeta-pj">
                                 <div class="pj-avatar" style="background-image: url('${pj.avatar || ''}')"></div>

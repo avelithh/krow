@@ -64,7 +64,6 @@
         <div class="tab solo-admin" id="tab-solicitudes" onclick="cambiarTab('solicitudes')" style="display: none;">Peticiones <span id="badge-peticiones" style="color:#a855f7;">(0)</span></div>
     </div>
 
-    <!-- PESTAÑA 1: GRUPOS -->
     <div class="tab-content activo" id="tab-grupos">
         <div class="chat-card">
             <div class="chat-info">
@@ -84,8 +83,6 @@
     </div>
 </div>
 
-    
-    <!-- PESTAÑA 3: SOLICITUDES -->
     <div class="tab-content" id="tab-solicitudes-content">
         <div id="lista-solicitudes"><div class="mensaje-vacio">No hay peticiones pendientes.</div></div>
     </div>
@@ -262,8 +259,6 @@
        const contenedor = document.getElementById('contenedor-privados');
        if (!contenedor) return;
        const miPjId = localStorage.getItem(`pj_activo_${comunidadId}`);
-
-       // IMPORTANTE: Ahora filtramos para que solo veas TUS chats, no los de todos
        const chatsRef = query(collection(db, `comunidades/${comunidadId}/chatsPrivados`), where("participantes", "array-contains", miPjId));
        
        onSnapshot(chatsRef, (snapshot) => {
@@ -276,8 +271,6 @@
 
            snapshot.forEach((docSnap) => {
                const chat = docSnap.data();
-               
-               // Averiguamos quién es el OTRO participante
                let nombreOtro = "Desconocido";
                let avatarOtro = "https://via.placeholder.com/40";
                

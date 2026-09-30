@@ -134,7 +134,6 @@
     </header>
 
     <div id="chat-contenedor">
-        <!-- Los mensajes aparecerán aquí -->
     </div>
 
     <div class="zona-input">
@@ -171,13 +170,11 @@
         let esAdmin = false;
         let datosSolicitud = null;
 
-        // --- EL TRUCO DE MEMORIA FOTOGRÁFICA ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 miUsuario = user;
-                localStorage.setItem("krow_sesion_respaldo", user.uid); // Guardamos copia de seguridad
+                localStorage.setItem("krow_sesion_respaldo", user.uid); 
             } else {
-                // Si Firebase falla, sacamos la copia de seguridad
                 const respaldoUid = localStorage.getItem("krow_sesion_respaldo");
                 if (respaldoUid) {
                     miUsuario = { uid: respaldoUid };
@@ -310,7 +307,6 @@
             }
         });
 
-                // --- LÓGICA DE LOS BOTONES DE ADMIN ---
         const btnAprobar = document.getElementById('btn-aprobar');
         const btnRechazar = document.getElementById('btn-rechazar');
         const btnFondo = document.getElementById('btn-cambiar-fondo');
@@ -333,17 +329,14 @@
                     btnAprobar.textContent = "Procesando...";
                     btnAprobar.disabled = true;
                     try {
-                        // 1. Cambiamos el estado de la solicitud
                         await updateDoc(doc(db, "solicitudes", solicitudId), { estado: "aprobada" });
                         
-                        // 2. Lo agregamos como miembro oficial de la comunidad
                         await setDoc(doc(db, `comunidades/${datosSolicitud.comunidadId}/miembros/${datosSolicitud.solicitanteId}`), {
                             rol: "miembro",
                             alias: datosSolicitud.alias,
                             fechaIngreso: serverTimestamp()
                         }, { merge: true });
 
-                        // 3. Creamos automáticamente su personaje en la base de datos
                         await addDoc(collection(db, `comunidades/${datosSolicitud.comunidadId}/miembros/${datosSolicitud.solicitanteId}/personajes`), {
                             nombre: datosSolicitud.personaje,
                             alias: datosSolicitud.alias,
@@ -381,7 +374,6 @@
                     btnRechazar.textContent = "Rechazando...";
                     btnRechazar.disabled = true;
                     try {
-                        // Cambiamos el estado a rechazada
                         await updateDoc(doc(db, "solicitudes", solicitudId), { estado: "rechazada" });
                         await Swal.fire({title: 'Ficha Rechazada', icon: 'info', background: '#09090b', color: '#fff'});
                         window.location.href = `bandeja-solicitudes.html?id=${datosSolicitud.comunidadId}`;
@@ -408,7 +400,6 @@
                 if (urlFondo) {
                     const fondoDiv = document.getElementById('chat-fondo');
                     if(fondoDiv) fondoDiv.style.backgroundImage = `url('${urlFondo}')`;
-                    // Opcional: guardamos el fondo en la memoria local para esta solicitud
                     localStorage.setItem(`fondo_chat_${solicitudId}`, urlFondo);
                 }
             });

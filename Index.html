@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Krow</title>
-    <!-- Importamos SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
@@ -18,13 +17,11 @@
             min-height: 100vh; 
         }
 
-        /* --- CONTENEDOR PRINCIPAL --- */
         .layout-dividido {
             display: flex;
             width: 100%;
         }
 
-        /* --- LADO IZQUIERDO: VISUAL --- */
         .panel-visual {
             flex: 1.2; 
             background: linear-gradient(135deg, rgba(15,12,20,0.85) 0%, rgba(10,8,12,0.4) 100%), 
@@ -55,7 +52,6 @@
             line-height: 1.5;
         }
 
-        /* --- LADO DERECHO: FORMULARIO --- */
         .panel-form {
             flex: 1;
             display: flex;
@@ -107,7 +103,6 @@
             border-bottom: 1px solid #e0e0e0;
         }
 
-        /* Enlace de recuperar contraseña */
         .forgot-password {
             text-align: right;
             margin-top: -15px;
@@ -125,7 +120,6 @@
             color: #fff;
         }
 
-        /* --- BOTONES --- */
         .btn-primary {
             width: 100%;
             background: #fff;
@@ -144,7 +138,6 @@
             transform: scale(0.98);
         }
 
-        /* --- SEPARADOR Y GOOGLE --- */
         .separador {
             display: flex;
             align-items: center;
@@ -211,7 +204,6 @@
             color: #fff;
         }
 
-        /* --- RESPONSIVIDAD --- */
         @media (max-width: 768px) {
             .layout-dividido {
                 flex-direction: column; 
@@ -239,13 +231,11 @@
 <body>
 
     <div class="layout-dividido">
-        <!-- MITAD IZQUIERDA -->
         <div class="panel-visual">
             <h1>Krow</h1>
-            <p>Cruza de nuevo el umbral. Ingresa a tu expediente y retoma tu rol en las sombras.</p>
+            <p>Cruza de nuevo el umbral. Ingresa a tu expediente y retoma tu rol.</p>
         </div>
 
-        <!-- MITAD DERECHA -->
         <div class="panel-form">
             <div class="form-contenedor">
                 <h2>Iniciar Sesión</h2>
@@ -260,14 +250,12 @@
                     <input type="password" id="login-password" placeholder="••••••••">
                 </div>
 
-                <!-- ENLACE DE RECUPERAR CONTRASEÑA -->
                 <div class="forgot-password">
                     <a href="#" id="btn-olvide">¿Olvidaste tu contraseña?</a>
                 </div>
                 
                 <button class="btn-primary" id="btn-login">Entrar a Krow</button>
 
-                <!-- SEPARADOR Y BOTÓN DE GOOGLE -->
                 <div class="separador">
                     <span>O ENTRA CON</span>
                 </div>
@@ -290,7 +278,6 @@
         </div>
     </div>
 
-    <!-- ===== CEREBRO DE INICIO DE SESIÓN Y RECUPERACIÓN ===== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
@@ -312,7 +299,6 @@
         const btnGoogleLogin = document.getElementById("btn-google-login");
         const btnOlvide = document.getElementById("btn-olvide");
 
-        // --- LOGIN CON CORREO Y CONTRASEÑA ---
         btnLogin.addEventListener("click", async () => {
             const email = document.getElementById("login-email").value;
             const pass = document.getElementById("login-password").value;
@@ -343,7 +329,6 @@
             }
         });
 
-        // --- RECUPERAR CONTRASEÑA ---
         btnOlvide.addEventListener("click", async (e) => {
             e.preventDefault();
             
@@ -387,7 +372,6 @@
             }
         });
 
-        // --- LOGIN CON GOOGLE ---
         btnGoogleLogin.addEventListener("click", async () => {
             try {
                 const resultado = await signInWithPopup(auth, proveedorGoogle);
