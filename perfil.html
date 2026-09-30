@@ -486,11 +486,18 @@ if (btnHacerMatch) {
         }
     });
 }
+                document.getElementById('btn-magico').addEventListener('click', async () => {
+            if (typeof uidPerfil !== 'undefined' && typeof usuarioActual !== 'undefined' && uidPerfil !== usuarioActual.uid) {
+                return Swal.fire({
+                    title: 'Zona ajena',
+                    text: 'No puedes crear publicaciones en el perfil de otro usuario.',
+                    icon: 'warning',
+                    background: '#09090b', color: '#fff'
+                });
+            }
 
-
-        document.getElementById('btn-magico').addEventListener('click', async () => {
             if(tabActual === 'feed') {
-                const { value: formValues } = await Swal.fire({
+        const { value: formValues } = await Swal.fire({
                     title: 'Nueva Publicación', html: `<input id="sf-img" class="swal2-input" placeholder="Link de la imagen"><textarea id="sf-txt" class="swal2-textarea" placeholder="Lore / Descripción..."></textarea>`,
                     background: '#09090b', color: '#fff', showCancelButton: true, confirmButtonText: 'Publicar',
                     preConfirm: () => { return { img: document.getElementById('sf-img').value, txt: document.getElementById('sf-txt').value } }
