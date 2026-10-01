@@ -175,17 +175,19 @@
                         <div class="post-it-autor">${avatarInfo} ${nombreAutor}</div>
                     `;
 
-                    div.onclick = () => abrirVisorChisme(data);
-                    muro.appendChild(div);
-                    }
+                                  div.onclick = () => abrirVisorChisme(data);
+            muro.appendChild(div);
+        } 
+    }); 
 
-                    if(!hayNotas) muro.innerHTML = '<div class="mensaje-vacio">El muro está limpio... por ahora.</div>';
-                    }); 
-                    }); 
-                    } 
+    if(!hayNotas) {
+        muro.innerHTML = '<div class="mensaje-vacio">El muro está limpio... por ahora.</div>';
+    }
+}); 
+} 
 
-        document.getElementById("btn-crear-nota").onclick = async () => {
-            
+document.getElementById("btn-crear-nota").onclick = async () => {
+
             if(!pjActivo) { 
                 Swal.fire({title: 'Buscando tu personaje...', background: '#121216', color: '#fff', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
                 const snap = await getDocs(collection(db, `comunidades/${comunidadId}/miembros/${usuarioActual.uid}/personajes`));
