@@ -155,7 +155,7 @@
                     const data = docSnap.data();
                     const tiempo = data.timestamp ? data.timestamp.toMillis() : Date.now();
                     
-                    if(tiempo < limite7Dias) return;
+                    if(tiempo >= limite7Dias) {
                     hayNotas = true;
                     data.id = docSnap.id;
 
@@ -177,11 +177,12 @@
 
                     div.onclick = () => abrirVisorChisme(data);
                     muro.appendChild(div);
-                });
+                    }
 
-                if(!hayNotas) muro.innerHTML = `<div class="mensaje-vacio">El muro está limpio... por ahora.</div>`;
-            });
-        }
+                    if(!hayNotas) muro.innerHTML = '<div class="mensaje-vacio">El muro está limpio... por ahora.</div>';
+                    }); 
+                    }); 
+                    } 
 
         document.getElementById("btn-crear-nota").onclick = async () => {
             
@@ -302,7 +303,6 @@
                 divComentarios.scrollTop = divComentarios.scrollHeight;
             });
         }
-
         document.getElementById("btn-enviar-comentario").onclick = async () => {
             const input = document.getElementById("input-comentario");
             const texto = input.value.trim();
