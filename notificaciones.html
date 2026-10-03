@@ -114,6 +114,7 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -194,7 +195,14 @@
             });
         }
 
+      onAuthStateChanged(auth, (user) => {
+    if (user) {
         escucharNotificaciones();
+    } else {
+        window.location.href = "index.html";
+    }
+});
+
     </script>
 </body>
 </html>
