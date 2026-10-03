@@ -243,13 +243,13 @@ document.getElementById("btn-crear-nota").onclick = async () => {
             let autorChisme = formValues[1] ? "Alguien anónimo" : (pjActivo.nombre ||"Desconocido");
             let avatarChisme = formValues[1] ? "" : (pjActivo.avatarUrl || "");
 
-            await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
+            await addDoc(collection(db, "comunidades/" + comunidadId + "/notificaciones"), {
                 tipo: 'chisme',
                 titulo: 'Nuevo chisme filtrado 🤫',
                 mensaje: `${autorChisme} ha soltado un chisme en el muro.`,
                 receptorId: 'todos',
                 avatarUrl: avatarChisme,
-                link: `chismes.html?id=${comunidadId}`,
+                link: "chismes.html?id=" + comunidadId,
                 leida: false,
                 timestamp: serverTimestamp()
             });
