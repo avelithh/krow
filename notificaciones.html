@@ -152,7 +152,12 @@
                     }
                 });
 
-                misNotis.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+                      misNotis.sort((a, b) => {
+            const timeA = (a.timestamp && typeof a.timestamp.toMillis === 'function') ? a.timestamp.toMillis() : 0;
+            const timeB = (b.timestamp && typeof b.timestamp.toMillis === 'function') ? b.timestamp.toMillis() : 0;
+            return timeB - timeA;
+        });
+
 
                 if (misNotis.length === 0) {
                     contenedor.innerHTML = '<div class="mensaje-vacio">Todo está tranquilo. No tienes notificaciones nuevas.</div>';
