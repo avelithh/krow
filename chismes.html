@@ -231,8 +231,12 @@ document.getElementById("btn-crear-nota").onclick = async () => {
 
                   if (formValues && formValues[0]) {
             await addDoc(collection(db, "comunidades", comunidadId, "chismes"), {
-                texto: formValues[0], estilo: window.estiloElegido, anonimo: formValues[1],
-                autorId: usuarioActual.uid, autorNombre: pjActivo.nombre, autorAvatar: pjActivo.avatarUrl,
+                texto: formValues[0],
+                estilo: window.estiloElegido,
+                anonimo: formValues[1],
+                autorId: usuarioActual.uid, 
+                autorNombre: pjActivo.nombre || "Desconocido",
+                autorAvatar: pjActivo.avatarUrl || "",
                 timestamp: serverTimestamp()
             });
 
