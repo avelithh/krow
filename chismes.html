@@ -240,7 +240,7 @@ document.getElementById("btn-crear-nota").onclick = async () => {
                 timestamp: serverTimestamp()
             });
 
-            let autorChisme = formValues[1] ? "Alguien anónimo" : pjActivo.nombre;
+            let autorChisme = formValues[1] ? "Alguien anónimo" : (pjActivo.nombre ||"Desconocido");
             let avatarChisme = formValues[1] ? "" : (pjActivo.avatarUrl || "");
 
             await addDoc(collection(db, `comunidades/${comunidadId}/notificaciones`), {
