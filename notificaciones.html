@@ -138,32 +138,27 @@
         };
 
                 function escucharNotificaciones() {
-            if (!comunidadId) return;
+            if (!comunidadId || !pjActivoId) return;
 
             const contenedor = document.getElementById('contenedor-notificaciones');
             
             const notisRef = collection(db, "comunidades/" + comunidadId + "/notificaciones");
             
             onSnapshot(notisRef, (snapshot) => {
-                console.log("¡Firebase respondió! Notificaciones encontradas:", snapshot.size);
                 contenedor.innerHTML = "";
                 let misNotis = [];
 
                 snapshot.forEach(docSnap => {
                     const noti = docSnap.data();
-                    console.log("Leyendo alerta:", noti);
                     
                     if (noti.receptorId === "todos" || noti.receptorId === pjActivoId) {
                         misNotis.push({ id: docSnap.id, ...noti });
                     }
                 });
 
-                      misNotis.sort((a, b) => {
-            const timeA = (a.timestamp && typeof a.timestamp.toMillis === 'function') ? a.timestamp.toMillis() : 0;
-            const timeB = (b.timestamp && typeof b.timestamp.toMillis === 'function') ? b.timestamp.toMillis() : 0;
-            return timeB - timeA;
-        });
+              misNotis.sort((a,b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
 
+              
 
                 if (misNotis.length === 0) {
                     contenedor.innerHTML = '<div class="mensaje-vacio">Todo está tranquilo. No tienes notificaciones nuevas.</div>';
