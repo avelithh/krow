@@ -61,7 +61,7 @@
         }
 
         .noti-card:hover { background: rgba(255, 255, 255, 0.06); }
-        
+
         .noti-card.nueva {
             background: rgba(168, 85, 247, 0.05);
             border-left: 4px solid #a855f7;
@@ -84,12 +84,9 @@
         .noti-titulo { margin: 0 0 4px 0; font-size: 0.95rem; font-weight: 600; color: #fff; }
         .noti-texto { margin: 0; font-size: 0.85rem; color: #a1a1aa; line-height: 1.4; }
         .noti-tiempo { font-size: 0.7rem; color: #52525b; margin-top: 5px; display: block; }
-        
+
         .mensaje-vacio { text-align: center; color: #52525b; margin-top: 40px; font-style: italic; }
     </style>
-  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-  <script>eruda.init();</script>
-
 </head>
 <body>
 
@@ -107,7 +104,7 @@
         import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyC3_P-pr1TObmm8bREQ2g4uLaDamTRHnGI",
+            apiKey: "AIzaSyC3_P-pr1TObmm8BREQ2g4uLaDamTRHnGI",
             authDomain: "krow-83002.firebaseapp.com",
             projectId: "krow-83002",
             storageBucket: "krow-83002.firebasestorage.app",
@@ -119,12 +116,11 @@
         const db = getFirestore(app);
 
         const urlParams = new URLSearchParams(window.location.search);
-        let comunidadId = urlParams.get('id') || localStorage.getItem('krow_comunidad_activa');
-
-        const pjActivoId = localStorage.getItem("pj_activo_" + comunidadId);
+        const comunidadId = urlParams.get('id');
+        const pjActivoId = localStorage.getItem(`pj_activo_${comunidadId}`);
 
         if (comunidadId) {
-            document.getElementById("btn-volver").href = "comunidad.html?id=" + comunidadId;
+            document.getElementById('btn-volver').href = `comunidad.html?id=${comunidadId}`;
         }
 
         const iconos = {
@@ -137,28 +133,25 @@
             'acceso': '🗝️'
         };
 
-                function escucharNotificaciones() {
+        function escucharNotificaciones() {
             if (!comunidadId || !pjActivoId) return;
 
             const contenedor = document.getElementById('contenedor-notificaciones');
-            
-            const notisRef = collection(db, "comunidades/" + comunidadId + "/notificaciones");
-            
+            const notisRef = collection(db, `comunidades/${comunidadId}/notificaciones`);
+
             onSnapshot(notisRef, (snapshot) => {
                 contenedor.innerHTML = "";
                 let misNotis = [];
 
                 snapshot.forEach(docSnap => {
                     const noti = docSnap.data();
-                    
+
                     if (noti.receptorId === "todos" || noti.receptorId === pjActivoId) {
                         misNotis.push({ id: docSnap.id, ...noti });
                     }
                 });
 
-              misNotis.sort((a,b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
-
-              
+                misNotis.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
 
                 if (misNotis.length === 0) {
                     contenedor.innerHTML = '<div class="mensaje-vacio">Todo está tranquilo. No tienes notificaciones nuevas.</div>';
@@ -168,7 +161,7 @@
                 misNotis.forEach((noti) => {
                     const card = document.createElement('div');
                     card.className = `noti-card ${noti.leida ? '' : 'nueva'}`;
-                    
+
                     const bgIcono = noti.avatarUrl ? `background-image: url('${noti.avatarUrl}');` : '';
                     const emoji = noti.avatarUrl ? '' : (iconos[noti.tipo] || '🔔');
 
@@ -184,16 +177,16 @@
                     card.onclick = async () => {
                         if (!noti.leida) {
                             try {
-                                await updateDoc(doc(db, "comunidades/" + comunidadId + "/notificaciones/" + noti.id), { leida: true });
+                                await updateDoc(doc(db, `comunidades/${comunidadId}/notificaciones/${noti.id}`), { leida: true });
                             } catch (e) { console.error(e); }
                         }
                         if (noti.link) window.location.href = noti.link;
                     };
                     contenedor.appendChild(card);
                 });
-            });
-        }
-
+    }); 
+}
+      
 escucharNotificaciones();
 
     </script>
