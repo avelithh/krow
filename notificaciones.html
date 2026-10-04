@@ -202,12 +202,16 @@
         }
 
       onAuthStateChanged(auth, async (user) => {
-    if (!user || !comunidadId) { 
+    if (!comunidadId) { 
         window.location.href = "index.html"; 
         return; 
     }
     
-    escucharNotificaciones();
+    if (user) {
+        escucharNotificaciones();
+    } else {
+        console.log("Esperando autenticación...");
+    }
 });
 
     </script>
