@@ -87,6 +87,9 @@
         
         .mensaje-vacio { text-align: center; color: #52525b; margin-top: 40px; font-style: italic; }
     </style>
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
+
 </head>
 <body>
 
@@ -143,11 +146,13 @@
             const notisRef = collection(db, "comunidades/" + comunidadId + "/notificaciones");
             
             onSnapshot(notisRef, (snapshot) => {
+                console.log("¡Firebase respondió! Notificaciones encontradas:", snapshot.size);
                 contenedor.innerHTML = "";
                 let misNotis = [];
 
                 snapshot.forEach(docSnap => {
                     const noti = docSnap.data();
+                    console.log("Leyendo alerta:", noti);
                     
                     if (noti.receptorId === "todos" || noti.receptorId === pjActivoId) {
                         misNotis.push({ id: docSnap.id, ...noti });
