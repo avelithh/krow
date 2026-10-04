@@ -201,18 +201,7 @@
             });
         }
 
-      onAuthStateChanged(auth, async (user) => {
-    if (!comunidadId) { 
-        window.location.href = "index.html"; 
-        return; 
-    }
-    
-    if (user) {
         escucharNotificaciones();
-    } else {
-        console.log("Esperando autenticación...");
-    }
-});
 
     </script>
 </body>
