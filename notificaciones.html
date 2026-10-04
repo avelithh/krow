@@ -121,7 +121,8 @@
         const db = getFirestore(app);
 
         const urlParams = new URLSearchParams(window.location.search);
-        const comunidadId = urlParams.get('id');
+        let comunidadId = urlParams.get('id') || localStorage.getItem('krow_comunidad_activa');
+
         const pjActivoId = localStorage.getItem("pj_activo_" + comunidadId);
 
         if (comunidadId) {
@@ -200,15 +201,15 @@
             });
         }
 
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        console.log("Sesión confirmada. Abriendo notificaciones...");
-        escucharNotificaciones();
-    } else {
-        console.log("Esperando a que cargue la credencial de Firebase...");
+      onAuthStateChanged(auth, async (user) => {
+    if (!user || !comunidadId) { 
+        window.location.href = "index.html"; 
+        return; 
     }
-});
     
+    escucharNotificaciones();
+});
+
     </script>
 </body>
 </html>
