@@ -200,7 +200,16 @@
             });
         }
 
+      const auth = getAuth(app);
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log("Sesión confirmada. Abriendo notificaciones...");
         escucharNotificaciones();
+    } else {
+        console.log("Esperando a que cargue la credencial de Firebase...");
+    }
+});
+
       
     </script>
 </body>
