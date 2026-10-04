@@ -198,6 +198,11 @@
                 }
                 datosSolicitud = solSnap.data();
                 const comunidadId = datosSolicitud.comunidadId || urlParams.get('comunidadId');
+                if (datosSolicitud.fondoUrl) {
+                const fondoDiv = document.getElementById('chat-fondo');
+                if (fondoDiv) fondoDiv.style.backgroundImage = `url('${datosSolicitud.fondoUrl}')`;
+                }
+
 
                 if (miUsuario && comunidadId) {
                     const comSnap = await getDoc(doc(db, "comunidades", comunidadId));
@@ -337,13 +342,6 @@
                             fechaIngreso: serverTimestamp()
                         }, { merge: true });
 
-                        await addDoc(collection(db, `comunidades/${datosSolicitud.comunidadId}/miembros/${datosSolicitud.solicitanteId}/personajes`), {
-                            nombre: datosSolicitud.personaje,
-                            alias: datosSolicitud.alias,
-                            datosExtra: datosSolicitud.datosExtra || "",
-                            fechaCreacion: serverTimestamp()
-                        });
-
                         await Swal.fire({title: '¡Ficha Aprobada!', text: 'El aspirante ya es parte oficial de la historia.', icon: 'success', background: '#09090b', color: '#fff'});
                         window.location.href = `bandeja-solicitudes.html?id=${datosSolicitud.comunidadId}`;
                     } catch (error) {
@@ -398,10 +396,11 @@
                 });
                 
                 if (urlFondo) {
-                    const fondoDiv = document.getElementById('chat-fondo');
-                    if(fondoDiv) fondoDiv.style.backgroundImage = `url('${urlFondo}')`;
-                    localStorage.setItem(`fondo_chat_${solicitudId}`, urlFondo);
-                }
+    const fondoDiv = document.getElementById('chat-fondo');
+    if (fondoDiv) fondoDiv.style.backgroundImage = `url('${urlFondo}')`;
+    await updateDoc(doc(db, "solicitudes", solicitudId), { fondoUrl: urlFondo });
+}
+
             });
         }
 
