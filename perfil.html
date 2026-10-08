@@ -137,12 +137,12 @@
         <div id="contenedor-corcho"></div>
     </div>
 
-    <button class="btn-flotante" id="btn-magico">+</button>
-
+  <button class="btn-flotante" id="btn-magico" style="display: none;">+</button>
+  
       <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, deleteDoc, setDoc, limit, updateDoc, collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyC3_P-prlT0bmm8bREQ2g4uLaDamTRHnGI", authDomain: "krow-83002.firebaseapp.com", projectId: "krow-83002", storageBucket: "krow-83002.firebasestorage.app", messagingSenderId: "567485047347", appId: "1:567485047347:web:87fbf4a8b44a657061b946" };
         const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
@@ -317,6 +317,7 @@
                     if (mipjActivo === pjPerfilId) {
                         const btnEditar = document.getElementById("btn-editar-perfil");
                         if (btnEditar) btnEditar.style.display = "block";
+                        document.getElementById("btn-magico").style.display = "flex";
                     }
                     
                     cargarFeed(); cargarDiario(); cargarCorcho();
@@ -344,20 +345,156 @@
             document.getElementById('cuerpo-perfil').style.backgroundColor = colorFondo;
         }
 
-        function cargarFeed() {
-            onSnapshot(query(collection(db, `comunidades/${comunidadId}/feed`), where("autorId", "==", pjActivo.id)), (snapshot) => {
-                const div = document.getElementById('contenedor-feed'); div.innerHTML = '';
-                if(snapshot.empty) { div.innerHTML = `<div class="caja-vacia">Tu cuadrícula está vacía. Crea una publicación.</div>`; return; }
-                
-                let pubs = []; snapshot.forEach(d => pubs.push(d.data()));
-                pubs.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+        let limitePostsFeed = 18;
+window.postsActuales = [];
 
-                pubs.forEach(post => {
-                    const template = `<div class="foto-cuadrada" style="background-image: url('${post.imagenUrl}')" onclick="Swal.fire({imageUrl: '${post.imagenUrl}', text: '${post.texto}', background: '#121216', color: '#fff'})"></div>`;
-                    div.insertAdjacentHTML('beforeend', template);
-                });
-            });
+function cargarFeed() {
+    const q = query(collection(db, `comunidades/${comunidadId}/feed`), where("autorId", "==", pjActivo.id), limit(limitePostsFeed));
+    
+    onSnapshot(q, (snapshot) => {
+        const div = document.getElementById('contenedor-feed');
+        div.innerHTML = '';
+        if (snapshot.empty) { div.innerHTML = '<div class="caja-vacia">Tu cuadrícula está vacía.</div>'; return; }
+        
+        let pubs = [];
+        snapshot.forEach(d => pubs.push({ id: d.id, ...d.data() }));
+        pubs.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+        
+        window.postsActuales = pubs; 
+        
+        pubs.forEach(post => {
+            const template = `<div class="foto-cuadrada" style="background-image: url('${post.imagenUrl}')" onclick="abrirPostEnGrande('${post.id}')"></div>`;
+            div.insertAdjacentHTML('beforeend', template);
+        });
+        
+        if (pubs.length === limitePostsFeed) {
+            div.insertAdjacentHTML('afterend', `<button id="btn-cargar-mas" style="width:100%; padding:12px; background:#18181b; color:#a855f7; border:1px solid #27272a; border-radius:8px; margin-top:15px; cursor:pointer; font-weight:bold;">Cargar más publicaciones</button>`);
+            document.getElementById('btn-cargar-mas').onclick = () => {
+                limitePostsFeed += 18;
+                document.getElementById('btn-cargar-mas').remove();
+                cargarFeed();
+            };
         }
+    });
+}
+
+        window.abrirPostEnGrande = (postId) => {
+    const post = window.postsActuales.find(p => p.id === postId);
+    if (!post) return;
+    const esDueño = (mipjActivo === pjPerfilId);
+    
+    const botonesAdmin = esDueño ? `
+        <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 5px;">
+            <button onclick="editarPostFeed('${post.id}')" style="background: transparent; border: 1px solid #a855f7; color: #a855f7; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Editar Texto</button>
+            <button onclick="eliminarPostFeed('${post.id}')" style="background: transparent; border: 1px solid #f43f5e; color: #f43f5e; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Eliminar</button>
+        </div>
+    ` : '';
+
+    Swal.fire({
+        showCloseButton: true, showConfirmButton: false, 
+        background: '#121216', color: '#fff', width: '90%', 
+        html: `
+            <div style="display:flex; flex-direction:column; gap:15px; text-align:left; margin-top: 10px;">
+                <img src="${post.imagenUrl}" style="width:100%; border-radius:8px; object-fit:cover; max-height:55vh;">
+                <div style="font-size:0.95rem;">
+                    <b style="color:#a855f7;">${post.autorNombre || pjActivo.nombre}</b> <span id="txt-post-${post.id}" style="color:#d4d4d8;">${post.texto}</span>
+                </div>
+                ${botonesAdmin}
+                <div style="display:flex; gap:20px; border-top:1px solid #27272a; padding-top:15px; font-size: 1.1rem; user-select:none;">
+                    <span style="cursor:pointer; color:#f43f5e;" id="btn-like-post">❤️ <span style="font-size:0.9rem;">${post.likes || 0}</span></span>
+                    <span style="cursor:pointer; color:#a1a1aa;">💬 <span style="font-size:0.9rem;" id="contador-comentarios">0</span></span>
+                </div>
+                
+                <div style="background:#09090b; padding:12px; border-radius:8px; border: 1px solid #27272a;">
+                    <div id="lista-comentarios" style="max-height: 150px; overflow-y: auto; margin-bottom: 10px; font-size:0.85rem; color:#d4d4d8;">
+                        Cargando...
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="input-comentario-${postId}" placeholder="Escribe algo..." autocomplete="off" style="flex:1; background:#121216; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; font-family:'Inter', sans-serif;">
+                        <button onclick="enviarComentario('${postId}')" style="background:#a855f7; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">></button>
+                    </div>
+                </div>
+            </div>
+        `,
+        didOpen: () => {
+            const caja = document.getElementById('lista-comentarios');
+            const contador = document.getElementById('contador-comentarios');
+            const q = query(collection(db, `comunidades/${comunidadId}/feed/${postId}/comentarios`), orderBy("timestamp", "asc"));
+            
+            window.unsubComentarios = onSnapshot(q, (snap) => {
+                if (!caja) return; 
+                caja.innerHTML = '';
+                contador.innerText = snap.size; 
+                if(snap.empty) {
+                    caja.innerHTML = '<span style="color:#71717a;">Aún no hay comentarios. Sé el primero...</span>';
+                    return;
+                }
+                snap.forEach(docSnap => {
+                    const c = docSnap.data();
+                    caja.innerHTML += `<div style="margin-bottom: 8px;"><b style="color:#a855f7;">${c.autorNombre}:</b> ${c.texto}</div>`;
+                });
+                caja.scrollTop = caja.scrollHeight; 
+            });
+        },
+        willClose: () => {
+            if(window.unsubComentarios) window.unsubComentarios(); 
+        }
+    });
+};
+
+window.enviarComentario = async (postId) => {
+    const input = document.getElementById(`input-comentario-${postId}`);
+    const texto = input.value.trim();
+    if (!texto) return;
+    
+    input.value = ''; 
+    
+    await addDoc(collection(db, `comunidades/${comunidadId}/feed/${postId}/comentarios`), {
+        texto: texto,
+        autorId: usuarioActual.uid,
+        autorNombre: pjActivo.nombre,
+        timestamp: serverTimestamp()
+    });
+};
+
+
+window.eliminarPostFeed = async (postId) => {
+    const confirmacion = await Swal.fire({
+        title: '¿Borrar publicación?',
+        text: "La imagen y los comentarios desaparecerán para siempre.",
+        icon: 'warning',
+        showCancelButton: true,
+        background: '#121216', color: '#fff',
+        confirmButtonColor: '#f43f5e', cancelButtonColor: '#27272a',
+        confirmButtonText: 'Sí, borrar', cancelButtonText: 'Cancelar'
+    });
+    
+    if (confirmacion.isConfirmed) {
+        await deleteDoc(doc(db, `comunidades/${comunidadId}/feed`, postId));
+        Swal.fire({ title: '¡Borrado!', icon: 'success', timer: 1500, showConfirmButton: false, background: '#121216', color: '#fff' });
+    }
+};
+
+window.editarPostFeed = async (postId) => {
+    const post = window.postsActuales.find(p => p.id === postId);
+    const { value: nuevoTexto } = await Swal.fire({
+        title: 'Editar descripción',
+        input: 'textarea',
+        inputValue: post.texto,
+        background: '#121216', color: '#fff',
+        showCancelButton: true,
+        confirmButtonColor: '#a855f7', cancelButtonColor: '#27272a',
+        confirmButtonText: 'Guardar'
+    });
+    
+    if (nuevoTexto !== undefined && nuevoTexto.trim() !== "") {
+        await updateDoc(doc(db, `comunidades/${comunidadId}/feed`, postId), { texto: nuevoTexto.trim() });
+        document.getElementById(`txt-post-${postId}`).innerText = nuevoTexto.trim();
+        post.texto = nuevoTexto.trim(); 
+    }
+};
+
+
 
         function cargarDiario() {
     const duenoUid = urlParams.get('uid') || (usuarioActual ? usuarioActual.uid : '');
