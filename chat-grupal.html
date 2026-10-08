@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { margin: 0; font-family: 'Inter', sans-serif; background-color: #09090b; color: #e0e0e0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background-color: #09090b; color: #e0e0e0; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
         #chat-fondo { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #09090b; background-size: cover; background-position: center; opacity: 0.25; z-index: -1; transition: background-image 0.3s ease; }
         header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background-color: rgba(9, 9, 11, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #1f1f23; z-index: 10; }
         .header-izq { display: flex; align-items: center; gap: 15px; }
@@ -68,6 +68,10 @@
         #btn-flotante-mencion { display: none; position: fixed; bottom: 90px; right: 20px; background-color: #18181b; color: #a855f7; border: 2px solid #a855f7; border-radius: 50%; width: 45px; height: 45px; font-weight: 800; font-size: 1.3rem; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.8); z-index: 100; cursor: pointer; transition: transform 0.2s; }
         #btn-flotante-mencion:active { transform: scale(0.9); }
         #contador-menciones { position: absolute; top: -5px; right: -5px; background: #eab308; color: #000; font-size: 0.65rem; border-radius: 50%; padding: 2px 6px; border: 2px solid #09090b; }
+      html.swal2-height-auto,
+      body.swal2-height-auto {
+      height: 100dvh !important;
+      }
     </style>
 </head>
 <body>
@@ -270,19 +274,27 @@ document.getElementById("opt-nombre").addEventListener("click", async (e) => {
     }
 });
 
-document.getElementById("opt-cerrar").addEventListener("click", async (e) => {
+          document.getElementById("opt-cerrar").addEventListener("click", async (e) => {
     e.preventDefault();
-    if (!esAdmin) return;
     
-    const estaCerrado = document.getElementById("banner-cerrado").style.display === "block";
-    await updateDoc(pathDocInfo, { chatCerrado: !estaCerrado });
+    if (!esAdmin) return Swal.fire({ title: 'Error', text: 'Solo administradores.', icon: 'error', background: '#121216', color: '#fff', heightAuto: false });
     
-    Swal.fire({
-        title: !estaCerrado ? 'Sala Cerrada' : 'Sala Abierta',
-        icon: 'success',
-        timer: 1500, showConfirmButton: false,
-        background: '#121216', color: '#fff'
-    });
+    const docSnap = await getDoc(pathDocInfo);
+    if (docSnap.exists()) {
+        const estadoActual = docSnap.data().chatCerrado || false;
+        
+        await updateDoc(pathDocInfo, { chatCerrado: !estadoActual });
+        
+        Swal.fire({
+            title: !estadoActual ? 'Sala Cerrada 🔒' : 'Sala Abierta 🔓',
+            text: !estadoActual ? 'Solo los administradores pueden enviar mensajes.' : 'Todos los usuarios pueden rolear.',
+            icon: 'success',
+            timer: 2000, 
+            showConfirmButton: false,
+            background: '#121216', color: '#fff',
+            heightAuto: false 
+        });
+    }
 });
       
         async function enviarMensaje() {
