@@ -151,8 +151,8 @@
         }
 
         function inicializarChat() {
-            localStorage.setItem(`ultimoAcceso_${comunidadId}_${chatKey}`, Date.now());
-
+          localStorage.setItem(`ultimoAcceso_${comunidadId}_${chatKey}`, Date.now());
+          const fondoGuardado = localStorage.getItem(`fondo_${comunidadId}_${chatKey}`);
             onSnapshot(pathDocInfo, (docSnap) => {
                 if(!docSnap.exists()) return;
                 const data = docSnap.data();
@@ -238,7 +238,53 @@
         const inputArchivo = document.getElementById("input-archivo"); document.getElementById("btn-galeria").onclick = () => { if(!personajeActivo) return; inputArchivo.click(); };
         inputArchivo.addEventListener("change", async (e) => { const archivo = e.target.files[0]; if(!archivo) return; if (!archivo.type.startsWith('image/')) { Swal.fire({title: 'Error', text: 'Selecciona una imagen válida.', background: '#121216', color: '#fff'}); return; } Swal.fire({title: 'Procesando...', allowOutsideClick: false, background: '#121216', color: '#fff', didOpen: () => Swal.showLoading()}); try { const reader = new FileReader(); reader.readAsDataURL(archivo); reader.onload = async (event) => { const img = new Image(); img.src = event.target.result; img.onload = async () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; const MAX_WIDTH = 800; const MAX_HEIGHT = 800; if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } } canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); const base64String = canvas.toDataURL('image/jpeg', 0.6); await addDoc(pathColeccion, { texto: "", imagenUrl: base64String, remitenteId: usuarioActual.uid, personajeId: personajeActivo.id, personajeNombre: personajeActivo.nombre, personajeAvatar: personajeActivo.avatarUrl, timestamp: serverTimestamp() }); await updateDoc(pathDocInfo, { ultimaActividad: serverTimestamp() }); Swal.close(); }; }; } catch(error) { Swal.fire({title: 'Error', text: 'No se pudo adjuntar.', background: '#121216', color: '#fff'}); } inputArchivo.value = ""; });
         document.getElementById("btn-enviar").onclick = enviarMensaje; inputMensaje.addEventListener("keypress", (e) => { if (e.key === "Enter") enviarMensaje(); });
-        
+
+document.getElementById("opt-fondo").addEventListener("click", async (e) => {
+    e.preventDefault();
+    const { value: urlFondo } = await Swal.fire({
+        title: 'Fondo de la Sala',
+        input: 'url',
+        inputPlaceholder: 'Pega el link de una imagen...',
+        background: '#121216', color: '#fff',
+        confirmButtonColor: '#a855f7'
+    });
+    if (urlFondo) {
+        document.getElementById("chat-fondo").style.backgroundImage = `url('${urlFondo}')`;
+        localStorage.setItem(`fondo_${comunidadId}_${chatKey}`, urlFondo);
+    }
+});
+
+document.getElementById("opt-nombre").addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!esAdmin) return Swal.fire({ title: 'Error', text: 'Solo admins.', icon: 'error', background: '#121216', color: '#fff' });
+    
+    const { value: nuevoNombre } = await Swal.fire({
+        title: 'Renombrar Sala',
+        input: 'text',
+        inputValue: document.getElementById("ui-nombre-chat").textContent.replace('CERRADO', '').trim(),
+        background: '#121216', color: '#fff',
+        confirmButtonColor: '#a855f7'
+    });
+    if (nuevoNombre) {
+        await updateDoc(pathDocInfo, { nombreChatGrupal: nuevoNombre });
+    }
+});
+
+document.getElementById("opt-cerrar").addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!esAdmin) return;
+    
+    const estaCerrado = document.getElementById("banner-cerrado").style.display === "block";
+    await updateDoc(pathDocInfo, { chatCerrado: !estaCerrado });
+    
+    Swal.fire({
+        title: !estaCerrado ? 'Sala Cerrada' : 'Sala Abierta',
+        icon: 'success',
+        timer: 1500, showConfirmButton: false,
+        background: '#121216', color: '#fff'
+    });
+});
+      
         async function enviarMensaje() {
             const texto = inputMensaje.value.trim(); if (!texto || !personajeActivo) return;
             const msg = { texto: texto, remitenteId: usuarioActual.uid, personajeId: personajeActivo.id, personajeNombre: personajeActivo.nombre, personajeAvatar: personajeActivo.avatarUrl, timestamp: serverTimestamp() };
