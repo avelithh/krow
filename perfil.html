@@ -162,12 +162,25 @@
         document.getElementById('btn-hacer-match').style.display = 'none';
 
         window.cambiarTab = (idTab, elemento) => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('activo'));
-            elemento.classList.add('activo');
-            document.getElementById(`tab-${idTab}`).classList.add('activo');
-            tabActual = idTab; 
-        };
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('activo'));
+    elemento.classList.add('activo');
+    document.getElementById(`tab-${idTab}`).classList.add('activo');
+    tabActual = idTab;
+
+    const esDueño = (mipjActivo === pjPerfilId);
+    const btnMagico = document.getElementById("btn-magico");
+
+    if (esDueño) {
+        btnMagico.style.display = "flex";
+    } else {
+        if (idTab === 'corcho') {
+            btnMagico.style.display = "flex";
+        } else {
+            btnMagico.style.display = "none";
+        }
+    }
+};
 
                 onAuthStateChanged(auth, async (user) => {
             if (!user) { window.location.href = "index.html"; return; }
@@ -363,7 +376,7 @@ function cargarFeed() {
         window.postsActuales = pubs; 
         
         pubs.forEach(post => {
-            const template = `<div class="foto-cuadrada" style="background-image: url('${post.imagenUrl}')" onclick="abrirPostEnGrande('${post.id}')"></div>`;
+            const template = `<div class="foto-cuadrada" style="background-image: url('${post.imagenUrl}')" onclick="window.abrirPostEnGrande('${post.id}')"></div>`;
             div.insertAdjacentHTML('beforeend', template);
         });
         
@@ -385,8 +398,8 @@ function cargarFeed() {
     
     const botonesAdmin = esDueño ? `
         <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 5px;">
-            <button onclick="editarPostFeed('${post.id}')" style="background: transparent; border: 1px solid #a855f7; color: #a855f7; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Editar Texto</button>
-            <button onclick="eliminarPostFeed('${post.id}')" style="background: transparent; border: 1px solid #f43f5e; color: #f43f5e; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Eliminar</button>
+            <button onclick="window.editarPostFeed('${post.id}')" style="background: transparent; border: 1px solid #a855f7; color: #a855f7; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Editar Texto</button>
+            <button onclick="window.eliminarPostFeed('${post.id}')" style="background: transparent; border: 1px solid #f43f5e; color: #f43f5e; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Eliminar</button>
         </div>
     ` : '';
 
@@ -411,7 +424,7 @@ function cargarFeed() {
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="input-comentario-${postId}" placeholder="Escribe algo..." autocomplete="off" style="flex:1; background:#121216; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; font-family:'Inter', sans-serif;">
-                        <button onclick="enviarComentario('${postId}')" style="background:#a855f7; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">></button>
+                        <button onclick="window.enviarComentario('${postId}')" style="background:#a855f7; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">></button>
                     </div>
                 </div>
             </div>
@@ -552,8 +565,6 @@ window.editarPostFeed = async (postId) => {
         });
     });
 }
-
-
 
         document.getElementById('btn-reproductor').addEventListener('click', () => {
             if(!pjActivo.cancionMp3) return;
