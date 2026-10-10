@@ -566,12 +566,9 @@ window.notasActuales = notas;
 
 notas.forEach(c => {
     const autor = c.anonimo ? 'Anónimo' : c.autorNombre;
-    const miPersonaje = localStorage.getItem(`pj_activo_${comunidadId}`);
-    const esMia = (miPersonaje === c.autorId);
-    const accion = esMia ? `onclick="window.opcionesCorcho('${c.id}')" style="cursor:pointer;"` : '';
 
-    const template = `
-        <div class="post-it" style="${c.estilo}" ${accion}>
+      const template = `
+        <div class="post-it" style="${c.estilo}; cursor:pointer;" onclick="window.opcionesCorcho('${c.id}')">
             <div class="tachuela"></div>
             <div class="post-it-texto">${c.texto}</div>
             <div class="post-it-autor">${autor}</div>
@@ -585,14 +582,24 @@ notas.forEach(c => {
         window.opcionesCorcho = async (notaId) => {
     const nota = window.notasActuales.find(n => n.id === notaId);
     if (!nota) return;
+    const miPersonaje = localStorage.getItem(`pj_activo_${comunidadId}`);
+    const esMia = (miPersonaje === nota.autorId);
+    const confirmText = esMia ? 'Editar' : '';
+    const denyText = esMia ? 'Despegar' : '';
 
     const accion = await Swal.fire({
-        title: 'Tu Post-it',
-        showDenyButton: true, showCancelButton: true,
-        confirmButtonText: 'Editar', denyButtonText: 'Despegar (Borrar)', cancelButtonText: 'Cancelar',
+        title: nota.anonimo ? 'Nota Anónima' : `De: ${nota.autorNombre}`,
+        html: `<div style="font-size:1.1rem; line-height:1.5; white-space:pre-wrap; text-align:left; color:#d4d4d8; margin-top:10px;">${nota.texto}</div>`,
+        showConfirmButton: esMia,
+        showDenyButton: esMia,    
+        showCloseButton: true,
+        confirmButtonText: confirmText, 
+        denyButtonText: denyText,
         background: '#121216', color: '#fff',
         confirmButtonColor: '#a855f7', denyButtonColor: '#f43f5e'
     });
+
+    if (!esMia) return; 
 
     const duenoUid = urlParams.get('uid') || (usuarioActual ? usuarioActual.uid : '');
     const rutaCorcho = `comunidades/${comunidadId}/miembros/${duenoUid}/personajes/${pjActivo.id}/corcho`;
@@ -609,7 +616,6 @@ notas.forEach(c => {
         await deleteDoc(doc(db, rutaCorcho, notaId));
     }
 };
-
 
         document.getElementById('btn-reproductor').addEventListener('click', () => {
             if(!pjActivo.cancionMp3) return;
