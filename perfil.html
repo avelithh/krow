@@ -566,7 +566,6 @@ window.notasActuales = notas;
 
 notas.forEach(c => {
     const autor = c.anonimo ? 'Anónimo' : c.autorNombre;
-    
     const miPersonaje = localStorage.getItem(`pj_activo_${comunidadId}`);
     const esMia = (miPersonaje === c.autorId);
     const accion = esMia ? `onclick="window.opcionesCorcho('${c.id}')" style="cursor:pointer;"` : '';
@@ -774,6 +773,7 @@ if (btnHacerMatch) {
                         estilo: window.estiloElegido, 
                         anonimo: formValues.anonimo, 
                         autorNombre: nombreEscritor, 
+                        autorId: mipjActivoId,
                         timestamp: serverTimestamp() 
                     });
 
