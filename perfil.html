@@ -565,7 +565,8 @@ notas.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() |
 
 notas.forEach(c => {
     const autor = c.anonimo ? 'Anónimo' : c.autorNombre;
-    const esMia = (mipjActivo === c.autorId);
+    const miPersonaje = localStorage.getItem(`pj_activo_${comunidadId}`);
+    const esMia = (miPersonaje === c.autorId);
     const accion = esMia ? `onclick="window.opcionesCorcho('${c.id}', '${c.texto}')" style="cursor:pointer;"` : '';
 
     const template = `
