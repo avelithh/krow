@@ -560,14 +560,16 @@ window.editarPostFeed = async (postId) => {
 
       let notas = [];
 snapshot.forEach(d => notas.push({ id: d.id, ...d.data() }));
-
 notas.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+
+window.notasActuales = notas; 
 
 notas.forEach(c => {
     const autor = c.anonimo ? 'Anónimo' : c.autorNombre;
+    
     const miPersonaje = localStorage.getItem(`pj_activo_${comunidadId}`);
     const esMia = (miPersonaje === c.autorId);
-    const accion = esMia ? `onclick="window.opcionesCorcho('${c.id}', '${c.texto}')" style="cursor:pointer;"` : '';
+    const accion = esMia ? `onclick="window.opcionesCorcho('${c.id}')" style="cursor:pointer;"` : '';
 
     const template = `
         <div class="post-it" style="${c.estilo}" ${accion}>
@@ -577,10 +579,14 @@ notas.forEach(c => {
         </div>`;
     div.insertAdjacentHTML('beforeend', template);
 });
+
     });
 }
 
-        window.opcionesCorcho = async (notaId, textoActual) => {
+        window.opcionesCorcho = async (notaId) => {
+    const nota = window.notasActuales.find(n => n.id === notaId);
+    if (!nota) return;
+
     const accion = await Swal.fire({
         title: 'Tu Post-it',
         showDenyButton: true, showCancelButton: true,
@@ -594,7 +600,7 @@ notas.forEach(c => {
 
     if (accion.isConfirmed) {
         const { value: nuevoTexto } = await Swal.fire({
-            title: 'Editar mensaje', input: 'textarea', inputValue: textoActual,
+            title: 'Editar mensaje', input: 'textarea', inputValue: nota.texto,
             background: '#121216', color: '#fff', confirmButtonColor: '#a855f7'
         });
         if (nuevoTexto && nuevoTexto.trim() !== "") {
