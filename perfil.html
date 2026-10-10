@@ -168,6 +168,8 @@
     document.getElementById(`tab-${idTab}`).classList.add('activo');
     tabActual = idTab;
 
+    const mipjActivo = localStorage.getItem(`pj_activo_${comunidadId}`);
+    const pjPerfilId = urlParams.get('pj') || mipjActivo;
     const esDueño = (mipjActivo === pjPerfilId);
     const btnMagico = document.getElementById("btn-magico");
 
@@ -394,8 +396,11 @@ function cargarFeed() {
         window.abrirPostEnGrande = (postId) => {
     const post = window.postsActuales.find(p => p.id === postId);
     if (!post) return;
+    const mipjActivo = localStorage.getItem(`pj_activo_${comunidadId}`);
+    const pjPerfilId = urlParams.get('pj') || mipjActivo;
     const esDueño = (mipjActivo === pjPerfilId);
-    
+
+          
     const botonesAdmin = esDueño ? `
         <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 5px;">
             <button onclick="window.editarPostFeed('${post.id}')" style="background: transparent; border: 1px solid #a855f7; color: #a855f7; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Editar Texto</button>
