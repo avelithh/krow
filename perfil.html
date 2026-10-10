@@ -399,8 +399,7 @@ function cargarFeed() {
     const mipjActivo = localStorage.getItem(`pj_activo_${comunidadId}`);
     const pjPerfilId = urlParams.get('pj') || mipjActivo;
     const esDueño = (mipjActivo === pjPerfilId);
-
-          
+ 
     const botonesAdmin = esDueño ? `
         <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 5px;">
             <button onclick="window.editarPostFeed('${post.id}')" style="background: transparent; border: 1px solid #a855f7; color: #a855f7; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Editar Texto</button>
@@ -419,7 +418,7 @@ function cargarFeed() {
                 </div>
                 ${botonesAdmin}
                 <div style="display:flex; gap:20px; border-top:1px solid #27272a; padding-top:15px; font-size: 1.1rem; user-select:none;">
-                    <span style="cursor:pointer; color:#f43f5e;" id="btn-like-post">❤️ <span style="font-size:0.9rem;">${post.likes || 0}</span></span>
+                    <span style="cursor:pointer; color:#f43f5e;" id="btn-like-post">❤️ <span style="font-size:0.9rem;">${Array.isArray(post.likes) ? post.likes.length : 0}</span></span>
                     <span style="cursor:pointer; color:#a1a1aa;">💬 <span style="font-size:0.9rem;" id="contador-comentarios">0</span></span>
                 </div>
                 
@@ -559,17 +558,52 @@ window.editarPostFeed = async (postId) => {
             return;
         }
 
-        let notas = []; 
-        snapshot.forEach(d => notas.push(d.data()));
-        notas.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+      let notas = [];
+snapshot.forEach(d => notas.push({ id: d.id, ...d.data() }));
 
-        notas.forEach(c => {
-            const autor = c.anonimo ? 'Anónimo' : c.autorNombre;
-            const template = `<div class="post-it" style="${c.estilo}"><div class="tachuela"></div><div class="post-it-texto">${c.texto}</div><div class="post-it-autor">${autor}</div></div>`;
-            div.insertAdjacentHTML('beforeend', template);
-        });
+notas.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+
+notas.forEach(c => {
+    const autor = c.anonimo ? 'Anónimo' : c.autorNombre;
+    const esMia = (mipjActivo === c.autorId);
+    const accion = esMia ? `onclick="window.opcionesCorcho('${c.id}', '${c.texto}')" style="cursor:pointer;"` : '';
+
+    const template = `
+        <div class="post-it" style="${c.estilo}" ${accion}>
+            <div class="tachuela"></div>
+            <div class="post-it-texto">${c.texto}</div>
+            <div class="post-it-autor">${autor}</div>
+        </div>`;
+    div.insertAdjacentHTML('beforeend', template);
+});
     });
 }
+
+        window.opcionesCorcho = async (notaId, textoActual) => {
+    const accion = await Swal.fire({
+        title: 'Tu Post-it',
+        showDenyButton: true, showCancelButton: true,
+        confirmButtonText: 'Editar', denyButtonText: 'Despegar (Borrar)', cancelButtonText: 'Cancelar',
+        background: '#121216', color: '#fff',
+        confirmButtonColor: '#a855f7', denyButtonColor: '#f43f5e'
+    });
+
+    const duenoUid = urlParams.get('uid') || (usuarioActual ? usuarioActual.uid : '');
+    const rutaCorcho = `comunidades/${comunidadId}/miembros/${duenoUid}/personajes/${pjActivo.id}/corcho`;
+
+    if (accion.isConfirmed) {
+        const { value: nuevoTexto } = await Swal.fire({
+            title: 'Editar mensaje', input: 'textarea', inputValue: textoActual,
+            background: '#121216', color: '#fff', confirmButtonColor: '#a855f7'
+        });
+        if (nuevoTexto && nuevoTexto.trim() !== "") {
+            await updateDoc(doc(db, rutaCorcho, notaId), { texto: nuevoTexto.trim() });
+        }
+    } else if (accion.isDenied) {
+        await deleteDoc(doc(db, rutaCorcho, notaId));
+    }
+};
+
 
         document.getElementById('btn-reproductor').addEventListener('click', () => {
             if(!pjActivo.cancionMp3) return;
