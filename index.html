@@ -314,7 +314,14 @@
                     confirmButtonColor: '#ffffff',
                     confirmButtonText: '<span style="color:#000; font-weight:600;">Entrar</span>'
                 }).then(() => {
-                    window.location.href = "hub.html";
+                  const destino = localStorage.getItem("invitacionPendiente");
+                  if (destino) {
+                  localStorage.removeItem("invitacionPendiente");
+                  window.location.href = destino;
+                  } else {
+                  window.location.href = "hub.html";
+                  }
+
                 });
             } catch (error) {
                 Swal.fire({
@@ -384,7 +391,14 @@
                     confirmButtonColor: '#ffffff',
                     confirmButtonText: '<span style="color:#000; font-weight:600;">Entrar</span>'
                 }).then(() => {
-                    window.location.href = "hub.html";
+                  const destino = localStorage.getItem("invitacionPendiente");
+                  if (destino) {
+                  localStorage.removeItem("invitacionPendiente");
+                  window.location.href = destino;
+                  } else {
+                  window.location.href = "hub.html";
+                  }
+
                 });
             } catch (error) {
                 Swal.fire({

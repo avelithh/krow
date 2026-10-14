@@ -82,6 +82,7 @@
             <div class="dropdown-opciones" id="menu-opciones">
                 <a href="#" class="opcion-item" id="opcion-lista-personajes">👥 Directorio de Personajes</a>
                 <a href="#" class="opcion-item solo-admin" id="opcion-lista-usuarios">⚙️ Gestión de Usuarios (Admins)</a>
+                <a href="#" class="opcion-item solo-admin" id="btn-copiar-link">🔗 Copiar Enlace de Invitación</a>
                 <a href="#" class="opcion-item" id="opcion-salir-definitivo">🚪 Abandonar Comunidad</a>
                 <a href="#" class="opcion-item opcion-peligro solo-admin" id="opcion-eliminar">⚠️ Eliminar comunidad</a>
             </div>
@@ -590,6 +591,27 @@
         }
 
         vigilarCampanita();
+
+      const btnCopiarLink = document.getElementById("btn-copiar-link");
+
+if (btnCopiarLink) {
+    btnCopiarLink.addEventListener("click", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const idActual = urlParams.get('id');
+        const linkNuevo = `${window.location.origin}/krow/solicitud.html?id=${idActual}`;
+        navigator.clipboard.writeText(linkNuevo);
+        
+        Swal.fire({
+            title: '¡Enlace copiado!',
+            text: 'El link de reclutamiento está listo en tu portapapeles.',
+            icon: 'success',
+            background: '#09090b',
+            color: '#fff',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    });
+}
 
     </script>
 </body>

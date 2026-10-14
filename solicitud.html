@@ -172,6 +172,7 @@
             if (user) {
                 usuarioActual = user;
             } else {
+                localStorage.setItem("invitacionPendiente", window.location.href);
                 window.location.href = "index.html";
             }
         });

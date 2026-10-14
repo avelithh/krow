@@ -356,7 +356,7 @@
 
                 cargarComunidades();
 
-                const linkInvitacion = `${window.location.origin}/comunidad.html?id=${docRef.id}`;
+                const linkInvitacion = `${window.location.origin}/krow/solicitud.html?id=${docRef.id}`;
                 Swal.fire({ 
                     title: '¡Universo forjado!', 
                     html: `Tu comunidad está lista para recibir roleplayers.<br><br><span style="font-size:0.85rem; color:#a1a1aa;">Comparte este enlace para invitar reclutas:</span><br><input type="text" value="${linkInvitacion}" readonly style="width:100%; padding:12px; background:#121216; color:#fff; border:1px solid #27272a; border-radius:8px; margin-top:10px; font-family:monospace; box-sizing:border-box; outline:none;">`,
